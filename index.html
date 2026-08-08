@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1720">
+<title>ทริปญี่ปุ่น</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --paper:#E6E9EC; --card:#FFFFFF; --ink:#0E1720; --muted:#5E6E7C; --hair:#D3D9DE;
+  --l-red:#E60012; --l-green:#009944; --l-blue:#0079C2; --l-orange:#F08300;
+  --l-yellow:#D9A400; --l-purple:#8E6EB0; --l-teal:#00A7DB; --l-gray:#7A8794;
+  --r:14px; --pad:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; padding-bottom:56px;
+}
+h1,h2,h3{font-family:"Bai Jamjuree","IBM Plex Sans Thai",sans-serif;margin:0;line-height:1.25;font-weight:700}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+a{color:var(--l-blue)}
+:focus-visible{outline:3px solid var(--l-teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:960px;margin:0 auto;padding:0 var(--pad)}
+
+/* ---------- ป้ายสถานี ---------- */
+.plate{background:var(--ink);color:#fff;padding:13px var(--pad) 14px;display:flex;align-items:center;gap:12px}
+.plate .code{
+  width:38px;height:38px;flex:0 0 38px;border:3px solid var(--l-green);border-radius:50%;
+  display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;
+}
+.plate .titles{flex:1;min-width:0}
+.plate h1{font-size:18px}
+.plate .sub{color:#9FB0BF;font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate .bal{text-align:right;flex:0 0 auto}
+.plate .bal .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:19px}
+.plate .bal .k{font-size:10.5px;color:#9FB0BF;letter-spacing:.04em}
+
+/* ---------- สลับหน้า ---------- */
+.seg{position:sticky;top:0;z-index:600;background:var(--ink);padding:0 var(--pad) 0;display:flex}
+.seg button{
+  flex:1;background:transparent;border:0;border-bottom:3px solid transparent;color:#8FA1B0;
+  font-family:"Bai Jamjuree",sans-serif;font-weight:600;font-size:14.5px;padding:11px 0 9px;cursor:pointer;
+}
+.seg button[aria-selected="true"]{color:#fff;border-bottom-color:var(--l-green)}
+
+.pane{display:none}
+.pane.on{display:block}
+section{padding-top:22px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+h2{font-size:17px;margin-bottom:13px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;border:1px solid var(--hair)}
+
+/* ---------- ฟอร์มบันทึก (แบบตู้ขายตั๋ว) ---------- */
+.tick-head{display:flex;gap:0;border-radius:10px;overflow:hidden;border:2px solid var(--ink)}
+.tick-head button{
+  flex:1;border:0;background:#fff;color:var(--ink);font:inherit;font-family:"Bai Jamjuree",sans-serif;
+  font-weight:600;font-size:15px;padding:11px 0;cursor:pointer;
+}
+.tick-head button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.amount{display:flex;align-items:center;gap:10px;margin:18px 0 4px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.cur{
+  border:2px solid var(--ink);background:#fff;border-radius:8px;font-family:"IBM Plex Mono",monospace;
+  font-weight:600;font-size:19px;width:58px;height:52px;cursor:pointer;flex:0 0 58px;
+}
+.cur[data-cur="THB"]{background:var(--ink);color:#fff}
+#amt{
+  flex:1;min-width:0;border:0;outline:0;background:transparent;text-align:right;
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:38px;letter-spacing:-.02em;padding:0;
+}
+#amt::placeholder{color:#C3CBD2}
+.conv{text-align:right;font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:13.5px;min-height:21px}
+
+.fld{margin-top:16px}
+.fld > label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  border:1px solid var(--hair);background:#fff;color:var(--muted);border-radius:999px;
+  padding:7px 14px;font:inherit;font-size:13.5px;cursor:pointer;font-family:"IBM Plex Sans Thai",sans-serif;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.chip .sw{width:9px;height:9px;border-radius:2px}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+input[type=text],input[type=date]{
+  width:100%;border:1px solid var(--hair);border-radius:9px;padding:11px 12px;
+  font:inherit;font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;background:#fff;color:var(--ink);
+}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:460px){.row2{grid-template-columns:1fr}}
+.save{
+  width:100%;margin-top:20px;border:0;border-radius:10px;background:var(--l-green);color:#fff;
+  font-family:"Bai Jamjuree",sans-serif;font-weight:700;font-size:17px;padding:15px;cursor:pointer;
+}
+.save:disabled{background:#9AA7B1;cursor:default}
+.save.out{background:var(--ink)}
+.status{margin-top:11px;font-size:13.5px;min-height:22px}
+.status.ok{color:var(--l-green)}
+.status.bad{color:var(--l-red)}
+.status.wait{color:var(--muted)}
+
+/* ---------- ยอดเงิน ---------- */
+.hero{padding:20px 18px}
+.hero .label{font-size:13px;color:var(--muted)}
+.big{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:40px;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
+.big.neg{color:var(--l-red)}
+.alt{font-family:"IBM Plex Mono",monospace;font-size:17px;color:var(--muted);margin-top:2px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--hair);border-radius:10px;overflow:hidden;margin-top:18px}
+.fact{background:var(--card);padding:12px 14px}
+.fact .k{font-size:11.5px;color:var(--muted)}
+.fact .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:17px;margin-top:1px}
+
+/* ---------- เส้นทางงบประมาณ ---------- */
+.route{margin-top:22px}
+.route-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.route-head .t{font-family:"Bai Jamjuree",sans-serif;font-weight:600;font-size:14px}
+.route-head .n{font-size:12px;color:var(--muted)}
+.rail{overflow-x:auto;padding:22px 2px 6px}
+.rail-inner{display:flex;align-items:flex-start;min-width:min-content}
+.stop{flex:0 0 auto;width:56px;text-align:center;position:relative}
+.stop .bar{position:absolute;top:7px;left:50%;width:56px;height:6px;border-radius:3px}
+.stop:last-child .bar{display:none}
+.stop .dot{position:relative;z-index:2;width:16px;height:16px;margin:2px auto 0;border-radius:50%;background:#fff;border:4px solid var(--hair)}
+.stop.done .dot{border-color:var(--l-green)}
+.stop.over .dot{border-color:var(--l-red)}
+.stop.today .dot{width:22px;height:22px;margin-top:-1px;border-width:5px;border-color:var(--ink);box-shadow:0 0 0 4px rgba(14,23,32,.12)}
+.stop .d{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:7px}
+.stop .amt{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:500;margin-top:1px}
+.stop.over .amt{color:var(--l-red)}
+.stop .flag{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-family:"IBM Plex Mono",monospace;background:var(--ink);color:#fff;padding:1px 7px;border-radius:3px;white-space:nowrap}
+
+/* ---------- แผนที่ ---------- */
+#map{height:360px;border-radius:var(--r);border:1px solid var(--hair);z-index:1}
+.dayrow{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.dayrow::-webkit-scrollbar{display:none}
+.dayrow .chip{flex:0 0 auto}
+.pin{width:20px;height:20px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);border:2.5px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.leaflet-popup-content{font-family:"IBM Plex Sans Thai",sans-serif;font-size:13.5px;margin:12px 14px}
+.leaflet-popup-content b{font-family:"Bai Jamjuree",sans-serif}
+
+/* ---------- หมวด / คน / รายการ ---------- */
+.split{display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:center}
+@media(max-width:560px){.split{grid-template-columns:1fr;gap:14px}}
+.legend{display:flex;flex-direction:column;gap:9px}
+.leg{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.leg .sw{width:10px;height:10px;border-radius:2px;flex:0 0 10px}
+.leg .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leg .vl{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500}
+.leg .pc{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);width:38px;text-align:right}
+.person{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--hair)}
+.person:last-child{border-bottom:0}
+.person .nm{flex:1;font-weight:500}
+.person .paid{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+.person .net{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14.5px;text-align:right}
+.net.plus{color:var(--l-green)}
+.net.minus{color:var(--l-red)}
+.settle{margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
+.tx{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--hair)}
+.tx:last-child{border-bottom:0}
+.tx.pending{opacity:.55}
+.tx .tick{width:4px;align-self:stretch;border-radius:2px;flex:0 0 4px}
+.tx .when{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);width:44px;flex:0 0 44px}
+.tx .what{flex:1;min-width:0}
+.tx .what b{font-weight:500;font-size:14px}
+.tx .what .meta{font-size:11.5px;color:var(--muted)}
+.tx .amt{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:14.5px;text-align:right;white-space:nowrap}
+.tx .amt small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.amt.in{color:var(--l-green)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.msg{background:var(--card);border:1px solid var(--hair);border-left:5px solid var(--l-red);border-radius:var(--r);padding:18px;margin-top:18px}
+.msg h3{font-size:15px;margin-bottom:8px}
+.msg code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:12.5px}
+.skeleton{color:var(--muted);font-size:13.5px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px;font-size:12px;color:var(--muted)}
+.btn{background:transparent;border:1px solid var(--hair);color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:12.5px;cursor:pointer;font-family:"IBM Plex Sans Thai",sans-serif}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="plate">
+  <div class="code" id="tripCode">JP</div>
+  <div class="titles">
+    <h1 id="tripName">ทริปญี่ปุ่น</h1>
+    <div class="sub" id="tripDates">กำลังเชื่อมต่อ…</div>
+  </div>
+  <div class="bal">
+    <div class="v mono" id="balTop">—</div>
+    <div class="k">คงเหลือ</div>
+  </div>
+</header>
+
+<div class="seg" role="tablist">
+  <button role="tab" id="tab-rec" aria-selected="true" aria-controls="pane-rec">บันทึกรายการ</button>
+  <button role="tab" id="tab-sum" aria-selected="false" aria-controls="pane-sum">สรุปงบ</button>
+</div>
+
+<div class="wrap"><div id="error"></div></div>
+
+<!-- ============ ส่วนที่ 1 บันทึก ============ -->
+<div class="pane on" id="pane-rec" role="tabpanel" aria-labelledby="tab-rec">
+<div class="wrap">
+  <section>
+    <div class="card">
+      <div class="tick-head">
+        <button type="button" id="kOut" aria-pressed="true">เงินออก</button>
+        <button type="button" id="kIn" aria-pressed="false">เงินเข้า</button>
+      </div>
+
+      <div class="amount">
+        <button type="button" class="cur" id="cur" data-cur="JPY">¥</button>
+        <input id="amt" type="text" inputmode="decimal" placeholder="0" aria-label="จำนวนเงิน">
+      </div>
+      <div class="conv" id="conv"></div>
+
+      <div class="fld" id="catField">
+        <label>หมวด</label>
+        <div class="chips" id="catChips"></div>
+      </div>
+
+      <div class="fld">
+        <label for="title">รายการ</label>
+        <input id="title" type="text" placeholder="เช่น ราเมงชินจูกุ">
+      </div>
+
+      <div class="fld">
+        <label>ผู้จ่าย</label>
+        <div class="chips" id="whoChips"><span class="skeleton">กำลังโหลดรายชื่อ…</span></div>
+      </div>
+
+      <div class="fld row2">
+        <div>
+          <label for="date">วันที่</label>
+          <input id="date" type="date">
+        </div>
+        <div>
+          <label for="memo">หมายเหตุ</label>
+          <input id="memo" type="text" placeholder="ไม่ใส่ก็ได้">
+        </div>
+      </div>
+
+      <button class="save out" id="save" type="button">บันทึกรายการ</button>
+      <div class="status" id="status"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Just now</div>
+    <h2>ที่เพิ่งบันทึกไป</h2>
+    <div class="card" id="recent"><div class="skeleton">กำลังโหลด…</div></div>
+  </section>
+</div>
+</div>
+
+<!-- ============ ส่วนที่ 2 สรุป ============ -->
+<div class="pane" id="pane-sum" role="tabpanel" aria-labelledby="tab-sum">
+<div class="wrap">
+  <section>
+    <div class="card hero">
+      <div class="label">คงเหลือจากงบตั้งต้น</div>
+      <div class="big mono" id="remainMain">—</div>
+      <div class="alt" id="remainAlt">—</div>
+      <div class="facts">
+        <div class="fact"><div class="k">งบตั้งต้น</div><div class="v" id="fBudget">—</div></div>
+        <div class="fact"><div class="k">ใช้ไปแล้ว</div><div class="v" id="fSpent">—</div></div>
+        <div class="fact"><div class="k">ใช้ไปคิดเป็น</div><div class="v" id="fPct">—</div></div>
+        <div class="fact"><div class="k">เหลือใช้ได้วันละ</div><div class="v" id="fPerDay">—</div></div>
+      </div>
+      <div class="route">
+        <div class="route-head">
+          <span class="t">เส้นทางงบประมาณ</span>
+          <span class="n" id="railNote">แต่ละสถานีคือหนึ่งวัน</span>
+        </div>
+        <div class="rail"><div class="rail-inner" id="rail"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Route map</div>
+    <h2>สถานที่ในทริป</h2>
+    <div class="dayrow" id="dayChips"></div>
+    <div id="map"></div>
+    <div class="note">แตะหมุดเพื่อดูรายละเอียดและกดเปิด Google Maps นำทางต่อ</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Breakdown</div>
+    <h2>เงินหมดไปกับอะไรบ้าง</h2>
+    <div class="card split">
+      <div id="donut"></div>
+      <div class="legend" id="legend"><div class="skeleton">กำลังโหลด…</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Split evenly</div>
+    <h2>ใครออกไปเท่าไร</h2>
+    <div class="card">
+      <div id="people-list"><div class="skeleton">กำลังโหลด…</div></div>
+      <div class="settle" id="settle"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Ledger</div>
+    <h2>รายการทั้งหมด</h2>
+    <div class="card" id="txlist"><div class="skeleton">กำลังโหลด…</div></div>
+    <div class="foot"><span id="stamp">—</span><button class="btn" id="reload" type="button">ดึงข้อมูลใหม่</button></div>
+  </section>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* =====================================================================
+   ตั้งค่าตรงนี้ที่เดียว — ดูวิธีหาค่าทั้งสองอันในคู่มือติดตั้ง ขั้นที่ 2
+   ===================================================================== */
+const CONFIG = {
+  WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxfUY45AMkRSvvO7XGNJCxyH-JzQNUlkTNayc_ykkU6STVDd9f8l_fIr2n9QTJYcccFeg/exec",
+  KEY: "japan2026",          // ต้องตรงกับ SECRET ในไฟล์ Apps Script
+  REFRESH_SECONDS: 45
+};
+
+const CATS = ["เดินทาง","ที่พัก","อาหาร","ค่าเข้าชม","ช้อปปิ้ง","อื่น ๆ"];
+const CAT_COLOR = {"เดินทาง":"#00A7DB","ที่พัก":"#0079C2","อาหาร":"#F08300","ค่าเข้าชม":"#D9A400","ช้อปปิ้ง":"#8E6EB0","อื่น ๆ":"#7A8794","อื่นๆ":"#7A8794"};
+const PLACE_COLOR = {"ที่พัก":"#0079C2","ที่เที่ยว":"#E60012","ร้านอาหาร":"#F08300","สถานี":"#009944","ช้อปปิ้ง":"#8E6EB0"};
+const SPARE = ["#00A7DB","#F08300","#8E6EB0","#009944","#D9A400","#E60012","#0079C2","#7A8794"];
+const colorFor=(m,k,i)=> m[k] || SPARE[(i+String(k||"").length)%SPARE.length];
+
+/* ---------------- state ---------------- */
+let RATE=0.24, MEMBERS=[], SETTINGS={}, TX=[], PLACES=[], PENDING=[];
+let MAP=null, GROUP=null, ACTIVE_DAY="all", MAP_READY=false;
+let FORM={kind:"เงินออก", cur:"JPY", cat:"อาหาร", who:""};
+
+/* ---------------- utils ---------------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const yen=n=>"¥"+fmt(n);
+const baht=n=>"฿"+fmt(n*RATE);
+function num(v){ if(v==null) return 0; const n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
+const DAY_MS=86400000;
+function parseDate(s){
+  if(!s) return null;
+  s=String(s).trim().split(" ")[0];
+  let y,m,d,mt=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(mt){y=+mt[1];m=+mt[2];d=+mt[3];}
+  else{ mt=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/); if(!mt) return null;
+        d=+mt[1];m=+mt[2];y=+mt[3]; if(y<100)y+=2000; }
+  if(y>2400) y-=543;
+  const dt=new Date(y,m-1,d);
+  return isNaN(dt.getTime())?null:dt;
+}
+const keyOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const shortDate=d=>d.getDate()+"/"+(d.getMonth()+1);
+const today0=()=>{const t=new Date();return new Date(t.getFullYear(),t.getMonth(),t.getDate());};
+function pick(o,...keys){
+  const e=Object.entries(o);
+  for(const k of keys){const h=e.find(([a])=>a===k); if(h&&h[1]!=="")return h[1];}
+  for(const k of keys){const h=e.find(([a])=>a.replace(/\s/g,"").includes(k.replace(/\s/g,""))); if(h&&h[1]!=="")return h[1];}
+  return "";
+}
+function toObjects(rows){
+  if(!rows||!rows.length) return [];
+  const head=rows[0].map(h=>String(h).trim());
+  return rows.slice(1).map(r=>{const o={};head.forEach((h,i)=>o[h]=r[i]!=null?String(r[i]).trim():"");return o;});
+}
+
+/* ---------------- คุยกับ Apps Script ---------------- */
+async function apiGet(){
+  const url=CONFIG.WEB_APP_URL+"?key="+encodeURIComponent(CONFIG.KEY)+"&t="+Date.now();
+  const res=await fetch(url,{redirect:"follow"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const data=await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+async function apiPost(row){
+  const body=JSON.stringify({key:CONFIG.KEY,row:row});
+  try{
+    const res=await fetch(CONFIG.WEB_APP_URL,{method:"POST",body:body,redirect:"follow"});
+    const out=await res.json();
+    if(out && out.ok===false) throw new Error(out.error||"ปฏิเสธการบันทึก");
+    return true;
+  }catch(e){
+    // เผื่อเบราว์เซอร์บล็อกการอ่านคำตอบ ยิงซ้ำแบบไม่รอคำตอบ แล้วไปยืนยันจากข้อมูลจริงแทน
+    await fetch(CONFIG.WEB_APP_URL,{method:"POST",body:body,mode:"no-cors"});
+    return false;
+  }
+}
+
+/* ---------------- โหลดข้อมูล ---------------- */
+async function load(){
+  if(CONFIG.WEB_APP_URL.indexOf("วางลิงก์")===0){
+    showError("ยังไม่ได้ใส่ลิงก์ Apps Script",
+      "เปิดไฟล์ <code>index.html</code> หาบรรทัด <code>WEB_APP_URL</code> แล้ววางลิงก์ที่ได้ตอนกด Deploy ลงไป ดูขั้นตอนในคู่มือติดตั้ง");
+    return;
+  }
+  try{
+    const d=await apiGet();
+    clearError();
+    SETTINGS=settingsMap(d.settings||[]);
+    TX=toObjects(d.tx||[]);
+    PLACES=toObjects(d.places||[]);
+    // รายการที่ขึ้นชีตแล้ว ให้เอาออกจากคิวรอ
+    const ids=new Set(TX.map(r=>pick(r,"รหัส")).filter(Boolean));
+    PENDING=PENDING.filter(p=>!ids.has(p["รหัส"]));
+    renderAll();
+    $("stamp").textContent="อัปเดต "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){
+    showError("เชื่อมต่อกับชีตไม่ได้",
+      "ตรวจสามอย่าง (1) ตอน Deploy ตั้ง “ผู้ที่มีสิทธิ์เข้าถึง” เป็น <b>ทุกคน</b> แล้วหรือยัง (2) ลิงก์ที่วางต้องลงท้ายด้วย <code>/exec</code> (3) ค่า <code>KEY</code> ในไฟล์นี้ต้องตรงกับ <code>SECRET</code> ในสคริปต์" +
+      "<br><span style='color:#5E6E7C'>ข้อความจากระบบ: "+esc(e.message||e)+"</span>");
+  }
+}
+function settingsMap(rows){
+  const m={}; rows.forEach(r=>{ if(r[0]) m[String(r[0]).trim()]=r[1]!=null?String(r[1]).trim():""; }); return m;
+}
+const showError=(t,h)=>$("error").innerHTML='<div class="msg"><h3>'+t+'</h3><div>'+h+'</div></div>';
+const clearError=()=>$("error").innerHTML="";
+
+/* ---------------- แปลงรายการ ---------------- */
+function normalize(r){
+  const cur=(pick(r,"สกุล","สกุลเงิน")||"JPY").toUpperCase();
+  const raw=num(pick(r,"จำนวนเงิน","จำนวน","ยอด"));
+  const isTHB=cur.indexOf("THB")>=0||cur.indexOf("บาท")>=0;
+  const type=pick(r,"ประเภท")||"เงินออก";
+  return {
+    id:pick(r,"รหัส"),
+    date:parseDate(pick(r,"วันที่","ประทับเวลา")),
+    isIn:type.indexOf("เข้า")>=0,
+    cat:pick(r,"หมวด")||"อื่น ๆ",
+    title:pick(r,"รายการ","รายละเอียด")||"(ไม่ระบุ)",
+    jpy: isTHB ? (RATE?raw/RATE:0) : raw,
+    who:pick(r,"ผู้จ่าย","คนจ่าย")||"กองกลาง",
+    note:pick(r,"หมายเหตุ")
+  };
+}
+
+/* ---------------- วาดทั้งหมด ---------------- */
+function renderAll(){
+  const name=SETTINGS["ชื่อทริป"]||"ทริปญี่ปุ่น";
+  RATE=num(SETTINGS["เรตแลก"])||0.24;
+  const budget=num(SETTINGS["งบตั้งต้น"]);
+  const start=parseDate(SETTINGS["วันเริ่ม"]), end=parseDate(SETTINGS["วันสิ้นสุด"]);
+  MEMBERS=(SETTINGS["สมาชิก"]||"").split(",").map(s=>s.trim()).filter(Boolean);
+
+  document.title=name;
+  $("tripName").textContent=name;
+  $("tripCode").textContent=MEMBERS.length?MEMBERS.length+"人":"JP";
+  $("tripDates").textContent=(start&&end?shortDate(start)+" – "+shortDate(end)+"/"+end.getFullYear():"ยังไม่ได้ตั้งวันเดินทาง")+" · เรต ฿"+RATE.toFixed(3)+"/เยน";
+
+  buildWhoChips();
+
+  const items=TX.concat(PENDING).map(normalize).filter(i=>i.jpy>0);
+  const out=items.filter(i=>!i.isIn), inc=items.filter(i=>i.isIn);
+  const spent=out.reduce((s,i)=>s+i.jpy,0), paidIn=inc.reduce((s,i)=>s+i.jpy,0);
+  const base=budget>0?budget:paidIn;
+  const remain=base-spent, pct=base>0?spent/base*100:0;
+
+  $("balTop").textContent=yen(remain);
+  const rm=$("remainMain");
+  rm.textContent=yen(remain); rm.classList.toggle("neg",remain<0);
+  $("remainAlt").textContent=baht(remain);
+  $("fBudget").textContent=yen(base);
+  $("fSpent").textContent=yen(spent);
+  $("fPct").textContent=(base>0?pct.toFixed(1):"0.0")+"%";
+
+  const t0=today0();
+  const daysLeft=end?Math.max(1,Math.round((end-t0)/DAY_MS)+1):1;
+  $("fPerDay").textContent=remain>0?yen(remain/daysLeft):"¥0";
+
+  drawRail(start,end,out,base,t0);
+  drawCats(out,spent);
+  drawPeople(out,inc,spent);
+  drawLedger(items,$("txlist"),40);
+  drawLedger(items,$("recent"),5);
+  drawMap();
+  updateConv();
+}
+
+/* ---------------- เส้นทางงบประมาณ ---------------- */
+function drawRail(start,end,out,base,t0){
+  const rail=$("rail");
+  if(!start||!end){ rail.innerHTML='<div class="skeleton">ใส่ “วันเริ่ม” และ “วันสิ้นสุด” ในแท็บตั้งค่า แล้วเส้นทางจะขึ้นตรงนี้</div>'; return; }
+  const total=Math.max(1,Math.round((end-start)/DAY_MS)+1), perDay=base/total;
+  $("railNote").textContent="งบเฉลี่ยวันละ "+yen(perDay);
+  const byDay={};
+  out.forEach(i=>{ if(i.date){const k=keyOf(i.date); byDay[k]=(byDay[k]||0)+i.jpy;} });
+  let html="";
+  for(let n=0;n<total;n++){
+    const d=new Date(start.getTime()+n*DAY_MS), k=keyOf(d), amt=byDay[k]||0;
+    const past=d<=t0, isToday=k===keyOf(t0), over=amt>perDay;
+    const cls=["stop",past&&amt>0?"done":"",past&&over?"over":"",isToday?"today":""].filter(Boolean).join(" ");
+    html+='<div class="'+cls+'">'+(isToday?'<span class="flag">วันนี้</span>':'')+
+      '<span class="bar" style="background:'+(past?(over?"#E60012":"#009944"):"#D3D9DE")+'"></span>'+
+      '<div class="dot"></div><div class="d">'+shortDate(d)+'</div>'+
+      '<div class="amt">'+(amt?fmt(amt/1000)+"k":"—")+'</div></div>';
+  }
+  rail.innerHTML=html;
+  const cur=rail.querySelector(".stop.today");
+  if(cur) cur.scrollIntoView({block:"nearest",inline:"center"});
+}
+
+/* ---------------- หมวด ---------------- */
+function drawCats(out,spent){
+  const sums={}; out.forEach(i=>sums[i.cat]=(sums[i.cat]||0)+i.jpy);
+  const rows=Object.entries(sums).sort((a,b)=>b[1]-a[1]);
+  const leg=$("legend");
+  if(!rows.length){ leg.innerHTML='<div class="skeleton">ยังไม่มีรายการค่าใช้จ่าย</div>'; $("donut").innerHTML=""; return; }
+  const R=54,C=2*Math.PI*R; let off=0,arcs="";
+  rows.forEach(([cat,v],i)=>{
+    const len=spent>0?v/spent*C:0;
+    arcs+='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+colorFor(CAT_COLOR,cat,i)+'" stroke-width="26" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'"></circle>';
+    off+=len;
+  });
+  $("donut").innerHTML='<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="สัดส่วนค่าใช้จ่ายแต่ละหมวด" style="transform:rotate(-90deg)">'+arcs+'</svg>';
+  leg.innerHTML=rows.map(([cat,v],i)=>
+    '<div class="leg"><span class="sw" style="background:'+colorFor(CAT_COLOR,cat,i)+'"></span>'+
+    '<span class="nm">'+esc(cat)+'</span><span class="vl">'+yen(v)+'</span>'+
+    '<span class="pc">'+(spent>0?(v/spent*100).toFixed(0):0)+'%</span></div>').join("");
+}
+
+/* ---------------- เคลียร์กับเพื่อน ---------------- */
+function drawPeople(out,inc,spent){
+  const box=$("people-list"), set=$("settle");
+  if(!MEMBERS.length){
+    box.innerHTML='<div class="skeleton">ใส่รายชื่อในแท็บตั้งค่า ช่อง “สมาชิก” คั่นด้วยจุลภาค เช่น จอย,เบียร์,ฝ้าย</div>';
+    set.innerHTML=""; return;
+  }
+  const share=spent/MEMBERS.length;
+  const rows=MEMBERS.map(m=>{
+    const paid=out.filter(i=>i.who===m).reduce((s,i)=>s+i.jpy,0);
+    const put=inc.filter(i=>i.who===m).reduce((s,i)=>s+i.jpy,0);
+    return {name:m,paid:paid+put,net:(paid+put)-share};
+  });
+  box.innerHTML='<div class="person" style="border-bottom:2px solid var(--ink)"><span class="nm">หารกัน '+MEMBERS.length+' คน</span><span class="net">คนละ '+yen(share)+'</span></div>'+
+    rows.map(r=>{
+      const cls=r.net>1?"plus":(r.net<-1?"minus":"");
+      const tag=r.net>1?"ควรได้คืน ":(r.net<-1?"ต้องจ่ายเพิ่ม ":"พอดี ");
+      return '<div class="person"><span class="nm">'+esc(r.name)+'</span><span class="paid">ออกไป '+yen(r.paid)+'</span><span class="net '+cls+'">'+tag+yen(Math.abs(r.net))+'</span></div>';
+    }).join("");
+  const owe=rows.filter(r=>r.net<-1).map(r=>({n:r.name,v:-r.net})).sort((a,b)=>b.v-a.v);
+  const get=rows.filter(r=>r.net>1).map(r=>({n:r.name,v:r.net})).sort((a,b)=>b.v-a.v);
+  const steps=[]; let a=0,b=0;
+  while(a<owe.length&&b<get.length){
+    const amt=Math.min(owe[a].v,get[b].v);
+    if(amt>1) steps.push(esc(owe[a].n)+" โอนให้ "+esc(get[b].n)+" <b class='mono'>"+yen(amt)+"</b> ("+baht(amt)+")");
+    owe[a].v-=amt; get[b].v-=amt;
+    if(owe[a].v<=1)a++; if(get[b].v<=1)b++;
+  }
+  set.innerHTML=steps.length
+    ? '<div style="font-weight:600;margin-bottom:6px">เคลียร์กันแบบนี้จบเลย</div><ul style="margin:0;padding-left:18px">'+steps.map(s=>"<li>"+s+"</li>").join("")+'</ul>'
+    : '<div style="color:var(--muted);font-size:13.5px">ตอนนี้ทุกคนออกเท่ากันพอดี ไม่ต้องเคลียร์อะไร</div>';
+}
+
+/* ---------------- รายการ ---------------- */
+function drawLedger(items,box,limit){
+  const pend=new Set(PENDING.map(p=>p["รหัส"]));
+  const sorted=items.slice().sort((x,y)=>(y.date?y.date.getTime():0)-(x.date?x.date.getTime():0)).slice(0,limit);
+  if(!sorted.length){ box.innerHTML='<div class="skeleton">ยังไม่มีรายการ ลองบันทึกรายการแรกดู</div>'; return; }
+  box.innerHTML=sorted.map((i,idx)=>{
+    const col=i.isIn?"#009944":colorFor(CAT_COLOR,i.cat,idx);
+    const waiting=i.id&&pend.has(i.id);
+    return '<div class="tx'+(waiting?" pending":"")+'"><span class="tick" style="background:'+col+'"></span>'+
+      '<span class="when">'+(i.date?shortDate(i.date):"—")+'</span>'+
+      '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":i.cat)+' · '+esc(i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
+      '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span></div>';
+  }).join("");
+}
+
+/* ---------------- แผนที่ ---------------- */
+function drawMap(){
+  const list=PLACES.map(r=>({
+    name:pick(r,"ชื่อ","สถานที่")||"(ไม่ระบุชื่อ)",
+    type:pick(r,"ประเภท")||"ที่เที่ยว",
+    lat:num(pick(r,"ละติจูด","lat")), lng:num(pick(r,"ลองจิจูด","lng","lon")),
+    date:parseDate(pick(r,"วันที่")), time:pick(r,"เวลา"), note:pick(r,"โน้ต","หมายเหตุ")
+  })).filter(p=>p.lat&&p.lng);
+  window.__places=list;
+
+  if(!MAP){
+    MAP=L.map("map",{scrollWheelZoom:false}).setView([35.6812,139.7671],11);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {maxZoom:19,attribution:"© OpenStreetMap, © CARTO"}).addTo(MAP);
+  }
+  const days=[...new Set(list.filter(p=>p.date).map(p=>keyOf(p.date)))].sort();
+  const row=$("dayChips");
+  row.innerHTML='<button class="chip" data-day="all" aria-pressed="'+(ACTIVE_DAY==="all")+'">ทั้งทริป</button>'+
+    days.map((k,i)=>'<button class="chip" data-day="'+k+'" aria-pressed="'+(ACTIVE_DAY===k)+'">วันที่ '+(i+1)+' · '+shortDate(new Date(k+"T00:00:00"))+'</button>').join("");
+  row.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    row.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); ACTIVE_DAY=b.dataset.day; paintMarkers();
+  }));
+  paintMarkers();
+}
+function paintMarkers(){
+  const list=window.__places||[];
+  if(GROUP){ MAP.removeLayer(GROUP); GROUP=null; }
+  const shown=ACTIVE_DAY==="all"?list:list.filter(p=>p.date&&keyOf(p.date)===ACTIVE_DAY);
+  if(!shown.length) return;
+  GROUP=L.layerGroup().addTo(MAP);
+  shown.forEach(p=>{
+    const icon=L.divIcon({className:"",html:'<div class="pin" style="background:'+colorFor(PLACE_COLOR,p.type,0)+'"></div>',iconSize:[20,20],iconAnchor:[10,18]});
+    L.marker([p.lat,p.lng],{icon}).addTo(GROUP).bindPopup(
+      "<b>"+esc(p.name)+"</b><br><span style='color:#5E6E7C'>"+esc(p.type)+(p.date?" · "+shortDate(p.date):"")+(p.time?" "+esc(p.time):"")+"</span>"+
+      (p.note?"<br>"+esc(p.note):"")+
+      '<br><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'">เปิดนำทางใน Google Maps</a>');
+  });
+  const byDay={};
+  shown.forEach(p=>{const k=p.date?keyOf(p.date):"x";(byDay[k]=byDay[k]||[]).push(p);});
+  Object.entries(byDay).forEach(([k,l],i)=>{
+    if(k==="x"||l.length<2) return;
+    l.sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+    L.polyline(l.map(p=>[p.lat,p.lng]),{color:SPARE[i%SPARE.length],weight:3,opacity:.65,dashArray:"6 7"}).addTo(GROUP);
+  });
+  MAP.fitBounds(L.latLngBounds(shown.map(p=>[p.lat,p.lng])).pad(0.25));
+}
+
+/* ---------------- ฟอร์มบันทึก ---------------- */
+function buildCatChips(){
+  $("catChips").innerHTML=CATS.map(c=>
+    '<button type="button" class="chip" data-cat="'+c+'" aria-pressed="'+(FORM.cat===c)+'">'+
+    '<span class="sw" style="background:'+colorFor(CAT_COLOR,c,0)+'"></span>'+c+'</button>').join("");
+  $("catChips").querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    FORM.cat=b.dataset.cat;
+    $("catChips").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  }));
+}
+function buildWhoChips(){
+  const opts=["กองกลาง"].concat(MEMBERS);
+  if(!FORM.who) FORM.who=opts[0];
+  $("whoChips").innerHTML=opts.map(w=>'<button type="button" class="chip" data-who="'+esc(w)+'" aria-pressed="'+(FORM.who===w)+'">'+esc(w)+'</button>').join("");
+  $("whoChips").querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    FORM.who=b.dataset.who;
+    $("whoChips").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  }));
+}
+function updateConv(){
+  const v=num($("amt").value);
+  $("conv").textContent = !v ? "" :
+    (FORM.cur==="JPY" ? "≈ ฿"+fmt(v*RATE) : "≈ ¥"+fmt(RATE?v/RATE:0));
+}
+function setKind(k){
+  FORM.kind=k;
+  $("kOut").setAttribute("aria-pressed",k==="เงินออก");
+  $("kIn").setAttribute("aria-pressed",k==="เงินเข้า");
+  $("catField").style.display = k==="เงินเข้า" ? "none":"block";
+  $("save").classList.toggle("out",k==="เงินออก");
+  $("title").placeholder = k==="เงินเข้า" ? "เช่น ลงขันกองกลาง" : "เช่น ราเมงชินจูกุ";
+}
+function newId(){ return "T"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+async function saveRow(){
+  const amount=num($("amt").value);
+  const st=$("status");
+  if(amount<=0){ st.className="status bad"; st.textContent="ใส่จำนวนเงินก่อนนะ"; $("amt").focus(); return; }
+  const row={
+    "รหัส":newId(),
+    "วันที่":$("date").value||keyOf(today0()),
+    "ประเภท":FORM.kind,
+    "หมวด":FORM.kind==="เงินเข้า"?"":FORM.cat,
+    "รายการ":$("title").value.trim()||(FORM.kind==="เงินเข้า"?"เงินเข้า":FORM.cat),
+    "จำนวนเงิน":amount,
+    "สกุล":FORM.cur,
+    "ผู้จ่าย":FORM.who,
+    "หมายเหตุ":$("memo").value.trim()
+  };
+  $("save").disabled=true;
+  st.className="status wait"; st.textContent="กำลังบันทึก…";
+
+  PENDING.push(row);
+  renderAll();
+  $("amt").value=""; $("title").value=""; $("memo").value=""; updateConv();
+
+  try{
+    const confirmed=await apiPost(row);
+    st.className="status ok";
+    st.textContent = confirmed ? "บันทึกแล้ว" : "ส่งแล้ว กำลังตรวจสอบ…";
+    setTimeout(async()=>{
+      await load();
+      const stillPending=PENDING.some(p=>p["รหัส"]===row["รหัส"]);
+      if(stillPending){
+        st.className="status bad";
+        st.textContent="ยังไม่เห็นรายการนี้ในชีต ลองกด “ดึงข้อมูลใหม่” ในแท็บสรุปอีกที";
+      }else{
+        st.className="status ok"; st.textContent="บันทึกลงชีตเรียบร้อย";
+      }
+    }, 2000);
+  }catch(e){
+    PENDING=PENDING.filter(p=>p["รหัส"]!==row["รหัส"]);
+    renderAll();
+    st.className="status bad"; st.textContent="บันทึกไม่สำเร็จ: "+(e.message||e);
+  }finally{
+    $("save").disabled=false;
+  }
+}
+
+/* ---------------- เชื่อมปุ่ม ---------------- */
+$("kOut").addEventListener("click",()=>setKind("เงินออก"));
+$("kIn").addEventListener("click",()=>setKind("เงินเข้า"));
+$("cur").addEventListener("click",()=>{
+  FORM.cur=FORM.cur==="JPY"?"THB":"JPY";
+  const c=$("cur"); c.dataset.cur=FORM.cur; c.textContent=FORM.cur==="JPY"?"¥":"฿";
+  updateConv();
+});
+$("amt").addEventListener("input",updateConv);
+$("save").addEventListener("click",saveRow);
+$("reload").addEventListener("click",load);
+
+function showTab(which){
+  const rec=which==="rec";
+  $("tab-rec").setAttribute("aria-selected",rec);
+  $("tab-sum").setAttribute("aria-selected",!rec);
+  $("pane-rec").classList.toggle("on",rec);
+  $("pane-sum").classList.toggle("on",!rec);
+  window.scrollTo(0,0);
+  if(!rec&&MAP){ setTimeout(()=>{MAP.invalidateSize(); if(!MAP_READY){paintMarkers();MAP_READY=true;}},60); }
+}
+$("tab-rec").addEventListener("click",()=>showTab("rec"));
+$("tab-sum").addEventListener("click",()=>showTab("sum"));
+
+$("date").value=keyOf(today0());
+setKind("เงินออก");
+buildCatChips();
+buildWhoChips();
+load();
+setInterval(load,CONFIG.REFRESH_SECONDS*1000);
+</script>
+</body>
+</html>
