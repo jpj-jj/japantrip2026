@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0E1720">
+<meta name="theme-color" content="#37352F">
 <title>ทริปญี่ปุ่น</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,9 +11,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{
-  --paper:#E6E9EC; --card:#FFFFFF; --ink:#0E1720; --muted:#5E6E7C; --hair:#D3D9DE;
-  --l-red:#E60012; --l-green:#009944; --l-blue:#0079C2; --l-orange:#F08300;
-  --l-yellow:#D9A400; --l-purple:#8E6EB0; --l-teal:#00A7DB; --l-gray:#7A8794;
+  /* โทนมูจิ — กระดาษไม่ฟอก ถ่านอุ่น และสีย้อมธรรมชาติ */
+  --paper:#F1EEE8; --card:#FBFAF7; --ink:#37352F; --muted:#8C877D; --hair:#E2DED5;
+  --warm:#EDE9E1;
+  --l-red:#A6483C; --l-green:#6E8B62; --l-blue:#5F7F8C; --l-orange:#C4874F;
+  --l-yellow:#A79A50; --l-purple:#9A7B8E; --l-teal:#7C93A0; --l-gray:#9A968E;
+  --t-rec:#C4874F; --t-sum:#5F7F8C;
   --r:14px; --pad:16px;
 }
 *{box-sizing:border-box}
@@ -26,29 +29,34 @@ body{
 h1,h2,h3{font-family:"Bai Jamjuree","IBM Plex Sans Thai",sans-serif;margin:0;line-height:1.25;font-weight:700}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 a{color:var(--l-blue)}
-:focus-visible{outline:3px solid var(--l-teal);outline-offset:2px;border-radius:4px}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
 .wrap{max-width:960px;margin:0 auto;padding:0 var(--pad)}
 
-/* ---------- ป้ายสถานี ---------- */
-.plate{background:var(--ink);color:#fff;padding:13px var(--pad) 14px;display:flex;align-items:center;gap:12px}
+/* ---------- ป้ายหัวเรื่อง ---------- */
+.plate{background:var(--ink);color:#F6F4EF;padding:14px var(--pad) 15px;display:flex;align-items:flex-start;gap:12px}
 .plate .code{
-  width:38px;height:38px;flex:0 0 38px;border:3px solid var(--l-green);border-radius:50%;
-  display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;
+  width:36px;height:36px;flex:0 0 36px;border:2px solid rgba(246,244,239,.4);border-radius:50%;
+  display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11.5px;margin-top:3px;
 }
-.plate .titles{flex:1;min-width:0}
-.plate h1{font-size:18px}
-.plate .sub{color:#9FB0BF;font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.plate .bal{text-align:right;flex:0 0 auto}
-.plate .bal .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:19px}
-.plate .bal .k{font-size:10.5px;color:#9FB0BF;letter-spacing:.04em}
+.plate .titles{flex:1;min-width:0;padding-top:2px}
+.plate h1{font-size:17px;font-weight:600}
+.plate .sub{color:#A9A296;font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate .bal{text-align:right;flex:0 0 auto;min-width:0}
+.plate .bal .k{font-size:10px;color:#A9A296;letter-spacing:.1em;text-transform:uppercase}
+.plate .bal .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:30px;letter-spacing:-.02em;line-height:1.15;margin-top:1px}
+.plate .bal .v.neg{color:#D99C92}
+.rateline{font-size:10.5px;color:#A9A296;line-height:1.55;margin-top:3px}
+.rateline b{font-family:"IBM Plex Mono",monospace;font-weight:500;color:#E4E0D8}
+.rateline .live{color:#B9BFAE}
 
 /* ---------- สลับหน้า ---------- */
-.seg{position:sticky;top:0;z-index:600;background:var(--ink);padding:0 var(--pad) 0;display:flex}
+.seg{position:sticky;top:0;z-index:600;background:var(--warm);border-bottom:1px solid var(--hair);display:flex}
 .seg button{
-  flex:1;background:transparent;border:0;border-bottom:3px solid transparent;color:#8FA1B0;
-  font-family:"Bai Jamjuree",sans-serif;font-weight:600;font-size:14.5px;padding:11px 0 9px;cursor:pointer;
+  flex:1;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);
+  font-family:"Bai Jamjuree",sans-serif;font-weight:600;font-size:14.5px;padding:12px 0 10px;cursor:pointer;
 }
-.seg button[aria-selected="true"]{color:#fff;border-bottom-color:var(--l-green)}
+#tab-rec[aria-selected="true"]{color:var(--t-rec);border-bottom-color:var(--t-rec);background:var(--card)}
+#tab-sum[aria-selected="true"]{color:var(--t-sum);border-bottom-color:var(--t-sum);background:var(--card)}
 
 .pane{display:none}
 .pane.on{display:block}
@@ -58,46 +66,61 @@ h2{font-size:17px;margin-bottom:13px}
 .card{background:var(--card);border-radius:var(--r);padding:18px;border:1px solid var(--hair)}
 
 /* ---------- ฟอร์มบันทึก (แบบตู้ขายตั๋ว) ---------- */
-.tick-head{display:flex;gap:0;border-radius:10px;overflow:hidden;border:2px solid var(--ink)}
+.tick-head{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--hair)}
 .tick-head button{
-  flex:1;border:0;background:#fff;color:var(--ink);font:inherit;font-family:"Bai Jamjuree",sans-serif;
-  font-weight:600;font-size:15px;padding:11px 0;cursor:pointer;
+  flex:1;border:0;background:var(--card);color:var(--muted);font:inherit;font-family:"Bai Jamjuree",sans-serif;
+  font-weight:600;font-size:15px;padding:12px 0;cursor:pointer;
 }
-.tick-head button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.amount{display:flex;align-items:center;gap:10px;margin:18px 0 4px;border-bottom:2px solid var(--ink);padding-bottom:6px}
-.cur{
-  border:2px solid var(--ink);background:#fff;border-radius:8px;font-family:"IBM Plex Mono",monospace;
-  font-weight:600;font-size:19px;width:58px;height:52px;cursor:pointer;flex:0 0 58px;
+#kOut[aria-pressed="true"],#edOut[aria-pressed="true"]{background:var(--l-red);color:#FBFAF7}
+#kIn[aria-pressed="true"],#edIn[aria-pressed="true"]{background:var(--l-green);color:#FBFAF7}
+.curseg{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--hair);margin-top:12px}
+.curseg button{
+  flex:1;border:0;background:var(--card);color:var(--muted);font:inherit;
+  font-family:"IBM Plex Sans Thai",sans-serif;font-size:14px;padding:9px 0;cursor:pointer;
 }
-.cur[data-cur="THB"]{background:var(--ink);color:#fff}
+.curseg button b{font-family:"IBM Plex Mono",monospace;font-size:16px;margin-right:5px}
+.curseg button[aria-pressed="true"]{background:var(--warm);color:var(--ink);font-weight:600;box-shadow:inset 0 -3px 0 var(--t-rec)}
+.amount{display:flex;align-items:center;gap:10px;margin:14px 0 4px;border-bottom:1.5px solid var(--ink);padding-bottom:6px}
+.sym{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:30px;color:var(--muted);flex:0 0 auto}
+.rateline{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.5}
+.rateline b{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink)}
+.rateline .live{color:var(--l-blue)}
+#subOther{margin-top:9px}
+.leg-sub{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding-left:19px}
+.leg-sub .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leg-sub .vl{font-family:"IBM Plex Mono",monospace;font-size:12px}
+.leg .vl small,.person .net small,.fact .v small{
+  display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);font-weight:400;
+}
+.leg .vl{text-align:right}
 #amt{
   flex:1;min-width:0;border:0;outline:0;background:transparent;text-align:right;
   font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:38px;letter-spacing:-.02em;padding:0;
 }
-#amt::placeholder{color:#C3CBD2}
+#amt::placeholder{color:#C9C4B9}
 .conv{text-align:right;font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:13.5px;min-height:21px}
 
 .fld{margin-top:16px}
 .fld > label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{
-  border:1px solid var(--hair);background:#fff;color:var(--muted);border-radius:999px;
+  border:1px solid var(--hair);background:var(--card);color:var(--muted);border-radius:999px;
   padding:7px 14px;font:inherit;font-size:13.5px;cursor:pointer;font-family:"IBM Plex Sans Thai",sans-serif;
   display:inline-flex;align-items:center;gap:7px;
 }
 .chip .sw{width:9px;height:9px;border-radius:2px}
-.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#FBFAF7}
 input[type=text],input[type=date]{
   width:100%;border:1px solid var(--hair);border-radius:9px;padding:11px 12px;
-  font:inherit;font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;background:#fff;color:var(--ink);
+  font:inherit;font-family:"IBM Plex Sans Thai",sans-serif;font-size:15px;background:var(--card);color:var(--ink);
 }
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:460px){.row2{grid-template-columns:1fr}}
 .save{
-  width:100%;margin-top:20px;border:0;border-radius:10px;background:var(--l-green);color:#fff;
+  width:100%;margin-top:20px;border:0;border-radius:10px;background:var(--l-green);color:#FBFAF7;
   font-family:"Bai Jamjuree",sans-serif;font-weight:700;font-size:17px;padding:15px;cursor:pointer;
 }
-.save:disabled{background:#9AA7B1;cursor:default}
+.save:disabled{background:#B7B2A8;cursor:default}
 .save.out{background:var(--ink)}
 .status{margin-top:11px;font-size:13.5px;min-height:22px}
 .status.ok{color:var(--l-green)}
@@ -125,21 +148,21 @@ input[type=text],input[type=date]{
 .stop{flex:0 0 auto;width:56px;text-align:center;position:relative}
 .stop .bar{position:absolute;top:7px;left:50%;width:56px;height:6px;border-radius:3px}
 .stop:last-child .bar{display:none}
-.stop .dot{position:relative;z-index:2;width:16px;height:16px;margin:2px auto 0;border-radius:50%;background:#fff;border:4px solid var(--hair)}
+.stop .dot{position:relative;z-index:2;width:16px;height:16px;margin:2px auto 0;border-radius:50%;background:var(--card);border:4px solid var(--hair)}
 .stop.done .dot{border-color:var(--l-green)}
 .stop.over .dot{border-color:var(--l-red)}
-.stop.today .dot{width:22px;height:22px;margin-top:-1px;border-width:5px;border-color:var(--ink);box-shadow:0 0 0 4px rgba(14,23,32,.12)}
+.stop.today .dot{width:22px;height:22px;margin-top:-1px;border-width:5px;border-color:var(--ink);box-shadow:0 0 0 4px rgba(55,53,47,.10)}
 .stop .d{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:7px}
 .stop .amt{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:500;margin-top:1px}
 .stop.over .amt{color:var(--l-red)}
-.stop .flag{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-family:"IBM Plex Mono",monospace;background:var(--ink);color:#fff;padding:1px 7px;border-radius:3px;white-space:nowrap}
+.stop .flag{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-family:"IBM Plex Mono",monospace;background:var(--ink);color:#FBFAF7;padding:1px 7px;border-radius:3px;white-space:nowrap}
 
 /* ---------- แผนที่ ---------- */
 #map{height:360px;border-radius:var(--r);border:1px solid var(--hair);z-index:1}
 .dayrow{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
 .dayrow::-webkit-scrollbar{display:none}
 .dayrow .chip{flex:0 0 auto}
-.pin{width:20px;height:20px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);border:2.5px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.pin{width:20px;height:20px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);border:2.5px solid #FBFAF7;box-shadow:0 2px 4px rgba(55,53,47,.3)}
 .leaflet-popup-content{font-family:"IBM Plex Sans Thai",sans-serif;font-size:13.5px;margin:12px 14px}
 .leaflet-popup-content b{font-family:"Bai Jamjuree",sans-serif}
 
@@ -159,7 +182,7 @@ input[type=text],input[type=date]{
 .person .net{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14.5px;text-align:right}
 .net.plus{color:var(--l-green)}
 .net.minus{color:var(--l-red)}
-.settle{margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
+.settle{margin-top:14px;padding-top:14px;border-top:1.5px solid var(--ink)}
 .tx{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--hair)}
 .tx:last-child{border-bottom:0}
 .tx.pending{opacity:.55}
@@ -174,10 +197,37 @@ input[type=text],input[type=date]{
 .note{font-size:12.5px;color:var(--muted);margin-top:10px}
 .msg{background:var(--card);border:1px solid var(--hair);border-left:5px solid var(--l-red);border-radius:var(--r);padding:18px;margin-top:18px}
 .msg h3{font-size:15px;margin-bottom:8px}
-.msg code{background:var(--paper);padding:1px 5px;border-radius:4px;font-size:12.5px}
+.msg code{background:var(--warm);padding:1px 5px;border-radius:4px;font-size:12.5px}
 .skeleton{color:var(--muted);font-size:13.5px}
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px;font-size:12px;color:var(--muted)}
 .btn{background:transparent;border:1px solid var(--hair);color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:12.5px;cursor:pointer;font-family:"IBM Plex Sans Thai",sans-serif}
+
+/* ---------- หน้าต่างแก้ไขรายการ ---------- */
+.tx[data-id]{cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:8px}
+.tx[data-id]:hover{background:var(--warm)}
+.tx .go{color:#C9C4B9;font-size:17px;flex:0 0 auto;line-height:1}
+.veil{
+  position:fixed;inset:0;z-index:900;background:rgba(55,53,47,.45);
+  display:none;align-items:flex-end;justify-content:center;
+}
+.veil.on{display:flex}
+@media(min-width:620px){.veil{align-items:center}}
+.sheet{
+  background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;
+  border-radius:18px 18px 0 0;padding:20px var(--pad) 26px;
+}
+@media(min-width:620px){.sheet{border-radius:18px}}
+.sheet-top{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.sheet-top h3{flex:1;font-size:17px}
+.x{background:transparent;border:0;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
+.sheet .amount{margin-top:14px}
+.acts{display:flex;gap:10px;margin-top:22px}
+.acts .save{margin-top:0;flex:1}
+.del{
+  border:1.5px solid var(--l-red);background:var(--card);color:var(--l-red);border-radius:10px;
+  font-family:"Bai Jamjuree",sans-serif;font-weight:700;font-size:15px;padding:15px 20px;cursor:pointer;flex:0 0 auto;
+}
+.del.arm{background:var(--l-red);color:#FBFAF7}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -190,8 +240,9 @@ input[type=text],input[type=date]{
     <div class="sub" id="tripDates">กำลังเชื่อมต่อ…</div>
   </div>
   <div class="bal">
-    <div class="v mono" id="balTop">—</div>
     <div class="k">คงเหลือ</div>
+    <div class="v mono" id="balTop">—</div>
+    <div class="rateline" id="rateline"></div>
   </div>
 </header>
 
@@ -212,8 +263,13 @@ input[type=text],input[type=date]{
         <button type="button" id="kIn" aria-pressed="false">เงินเข้า</button>
       </div>
 
+      <div class="curseg" role="group" aria-label="สกุลเงิน">
+        <button type="button" id="curJPY" aria-pressed="true"><b>¥</b>เงินเยน</button>
+        <button type="button" id="curTHB" aria-pressed="false"><b>฿</b>เงินไทย</button>
+      </div>
+
       <div class="amount">
-        <button type="button" class="cur" id="cur" data-cur="JPY">¥</button>
+        <span class="sym" id="sym">¥</span>
         <input id="amt" type="text" inputmode="decimal" placeholder="0" aria-label="จำนวนเงิน">
       </div>
       <div class="conv" id="conv"></div>
@@ -221,6 +277,12 @@ input[type=text],input[type=date]{
       <div class="fld" id="catField">
         <label>หมวด</label>
         <div class="chips" id="catChips"></div>
+      </div>
+
+      <div class="fld" id="subField" style="display:none">
+        <label>รายการย่อย</label>
+        <div class="chips" id="subChips"></div>
+        <input id="subOther" type="text" placeholder="ระบุรายการย่อย" style="display:none">
       </div>
 
       <div class="fld">
@@ -316,6 +378,64 @@ input[type=text],input[type=date]{
 </div>
 </div>
 
+<!-- ============ หน้าต่างแก้ไข / ลบรายการ ============ -->
+<div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+  <div class="sheet">
+    <div class="sheet-top">
+      <h3 id="edTitle">แก้ไขรายการ</h3>
+      <button class="x" id="edClose" type="button" aria-label="ปิด">×</button>
+    </div>
+
+    <div class="tick-head">
+      <button type="button" id="edOut" aria-pressed="true">เงินออก</button>
+      <button type="button" id="edIn" aria-pressed="false">เงินเข้า</button>
+    </div>
+
+    <div class="curseg" role="group" aria-label="สกุลเงิน">
+      <button type="button" id="edCurJPY" aria-pressed="true"><b>¥</b>เงินเยน</button>
+      <button type="button" id="edCurTHB" aria-pressed="false"><b>฿</b>เงินไทย</button>
+    </div>
+
+    <div class="amount">
+      <span class="sym" id="edSym">¥</span>
+      <input id="edAmt" type="text" inputmode="decimal" placeholder="0" aria-label="จำนวนเงิน">
+    </div>
+    <div class="conv" id="edConv"></div>
+
+    <div class="fld" id="edCatField">
+      <label>หมวด</label>
+      <div class="chips" id="edCatChips"></div>
+    </div>
+
+    <div class="fld" id="edSubField" style="display:none">
+      <label>รายการย่อย</label>
+      <div class="chips" id="edSubChips"></div>
+      <input id="edSubOther" type="text" placeholder="ระบุรายการย่อย" style="display:none">
+    </div>
+
+    <div class="fld">
+      <label for="edTitleInput">รายการ</label>
+      <input id="edTitleInput" type="text">
+    </div>
+
+    <div class="fld">
+      <label>ผู้จ่าย</label>
+      <div class="chips" id="edWhoChips"></div>
+    </div>
+
+    <div class="fld row2">
+      <div><label for="edDate">วันที่</label><input id="edDate" type="date"></div>
+      <div><label for="edMemo">หมายเหตุ</label><input id="edMemo" type="text"></div>
+    </div>
+
+    <div class="acts">
+      <button class="del" id="edDel" type="button">ลบ</button>
+      <button class="save" id="edSave" type="button">บันทึกการแก้ไข</button>
+    </div>
+    <div class="status" id="edStatus"></div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* =====================================================================
@@ -327,16 +447,26 @@ const CONFIG = {
   REFRESH_SECONDS: 45
 };
 
-const CATS = ["เดินทาง","ที่พัก","อาหาร","ค่าเข้าชม","ช้อปปิ้ง","อื่น ๆ"];
-const CAT_COLOR = {"เดินทาง":"#00A7DB","ที่พัก":"#0079C2","อาหาร":"#F08300","ค่าเข้าชม":"#D9A400","ช้อปปิ้ง":"#8E6EB0","อื่น ๆ":"#7A8794","อื่นๆ":"#7A8794"};
-const PLACE_COLOR = {"ที่พัก":"#0079C2","ที่เที่ยว":"#E60012","ร้านอาหาร":"#F08300","สถานี":"#009944","ช้อปปิ้ง":"#8E6EB0"};
-const SPARE = ["#00A7DB","#F08300","#8E6EB0","#009944","#D9A400","#E60012","#0079C2","#7A8794"];
+const CATS = ["เดินทาง","ที่พัก","อาหารและเครื่องดื่ม","ค่าเข้าชม","ช้อปปิ้ง","อื่น ๆ"];
+const OTHER = "อื่น ๆ";
+const SUBCATS = {
+  "เดินทาง":            ["ค่าเช่ารถ","ค่าประกันการเดินทาง","ค่าทางด่วน","ค่ารถไฟ","ค่าที่จอดรถ",OTHER],
+  "ค่าเข้าชม":           ["ค่าเข้าสถานที่","ค่ารถบัส","ค่าขึ้นกระเช้า",OTHER],
+  "อาหารและเครื่องดื่ม": ["อาหารเช้า","อาหารเที่ยง","อาหารเย็น",OTHER]
+};
+// รายการเก่าที่บันทึกไว้ว่า "อาหาร" ให้นับรวมกับหมวดใหม่
+const CAT_ALIAS = {"อาหาร":"อาหารและเครื่องดื่ม","อื่นๆ":OTHER};
+const canonCat = c => CAT_ALIAS[c] || c || OTHER;
+const CAT_COLOR = {"เดินทาง":"#7C93A0","ที่พัก":"#5F7F8C","อาหารและเครื่องดื่ม":"#C4874F","อาหาร":"#C4874F","ค่าเข้าชม":"#A79A50","ช้อปปิ้ง":"#9A7B8E","อื่น ๆ":"#9A968E","อื่นๆ":"#9A968E"};
+const PLACE_COLOR = {"ที่พัก":"#5F7F8C","ที่เที่ยว":"#A6483C","ร้านอาหาร":"#C4874F","สถานี":"#6E8B62","ช้อปปิ้ง":"#9A7B8E"};
+const SPARE = ["#7C93A0","#C4874F","#9A7B8E","#6E8B62","#A79A50","#A6483C","#5F7F8C","#9A968E"];
+const C_GREEN="#6E8B62", C_RED="#A6483C", C_HAIR="#E2DED5", C_MUTED="#8C877D";
 const colorFor=(m,k,i)=> m[k] || SPARE[(i+String(k||"").length)%SPARE.length];
 
 /* ---------------- state ---------------- */
-let RATE=0.24, MEMBERS=[], SETTINGS={}, TX=[], PLACES=[], PENDING=[];
+let RATE=0.24, LIVE_RATE=null, MEMBERS=[], SETTINGS={}, TX=[], PLACES=[], PENDING=[];
 let MAP=null, GROUP=null, ACTIVE_DAY="all", MAP_READY=false;
-let FORM={kind:"เงินออก", cur:"JPY", cat:"อาหาร", who:""};
+let FORM={kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", who:""};
 
 /* ---------------- utils ---------------- */
 const $=id=>document.getElementById(id);
@@ -381,8 +511,8 @@ async function apiGet(){
   if(data.error) throw new Error(data.error);
   return data;
 }
-async function apiPost(row){
-  const body=JSON.stringify({key:CONFIG.KEY,row:row});
+async function apiPost(row,action){
+  const body=JSON.stringify({key:CONFIG.KEY,action:action||"add",row:row});
   try{
     const res=await fetch(CONFIG.WEB_APP_URL,{method:"POST",body:body,redirect:"follow"});
     const out=await res.json();
@@ -416,7 +546,7 @@ async function load(){
   }catch(e){
     showError("เชื่อมต่อกับชีตไม่ได้",
       "ตรวจสามอย่าง (1) ตอน Deploy ตั้ง “ผู้ที่มีสิทธิ์เข้าถึง” เป็น <b>ทุกคน</b> แล้วหรือยัง (2) ลิงก์ที่วางต้องลงท้ายด้วย <code>/exec</code> (3) ค่า <code>KEY</code> ในไฟล์นี้ต้องตรงกับ <code>SECRET</code> ในสคริปต์" +
-      "<br><span style='color:#5E6E7C'>ข้อความจากระบบ: "+esc(e.message||e)+"</span>");
+      "<br><span style='color:"+C_MUTED+"'>ข้อความจากระบบ: "+esc(e.message||e)+"</span>");
   }
 }
 function settingsMap(rows){
@@ -435,7 +565,8 @@ function normalize(r){
     id:pick(r,"รหัส"),
     date:parseDate(pick(r,"วันที่","ประทับเวลา")),
     isIn:type.indexOf("เข้า")>=0,
-    cat:pick(r,"หมวด")||"อื่น ๆ",
+    cat:canonCat(pick(r,"หมวด")),
+    sub:pick(r,"รายการย่อย"),
     title:pick(r,"รายการ","รายละเอียด")||"(ไม่ระบุ)",
     jpy: isTHB ? (RATE?raw/RATE:0) : raw,
     who:pick(r,"ผู้จ่าย","คนจ่าย")||"กองกลาง",
@@ -464,17 +595,19 @@ function renderAll(){
   const base=budget>0?budget:paidIn;
   const remain=base-spent, pct=base>0?spent/base*100:0;
 
-  $("balTop").textContent=yen(remain);
+  const bt=$("balTop");
+  bt.textContent=yen(remain);
+  bt.classList.toggle("neg",remain<0);
   const rm=$("remainMain");
   rm.textContent=yen(remain); rm.classList.toggle("neg",remain<0);
   $("remainAlt").textContent=baht(remain);
-  $("fBudget").textContent=yen(base);
-  $("fSpent").textContent=yen(spent);
-  $("fPct").textContent=(base>0?pct.toFixed(1):"0.0")+"%";
+  $("fBudget").innerHTML=yen(base)+"<small>"+baht(base)+"</small>";
+  $("fSpent").innerHTML=yen(spent)+"<small>"+baht(spent)+"</small>";
+  $("fPct").innerHTML=(base>0?pct.toFixed(1):"0.0")+"%<small>ของงบตั้งต้น</small>";
 
   const t0=today0();
   const daysLeft=end?Math.max(1,Math.round((end-t0)/DAY_MS)+1):1;
-  $("fPerDay").textContent=remain>0?yen(remain/daysLeft):"¥0";
+  $("fPerDay").innerHTML=remain>0?(yen(remain/daysLeft)+"<small>"+baht(remain/daysLeft)+"</small>"):"¥0";
 
   drawRail(start,end,out,base,t0);
   drawCats(out,spent);
@@ -499,7 +632,7 @@ function drawRail(start,end,out,base,t0){
     const past=d<=t0, isToday=k===keyOf(t0), over=amt>perDay;
     const cls=["stop",past&&amt>0?"done":"",past&&over?"over":"",isToday?"today":""].filter(Boolean).join(" ");
     html+='<div class="'+cls+'">'+(isToday?'<span class="flag">วันนี้</span>':'')+
-      '<span class="bar" style="background:'+(past?(over?"#E60012":"#009944"):"#D3D9DE")+'"></span>'+
+      '<span class="bar" style="background:'+(past?(over?C_RED:C_GREEN):C_HAIR)+'"></span>'+
       '<div class="dot"></div><div class="d">'+shortDate(d)+'</div>'+
       '<div class="amt">'+(amt?fmt(amt/1000)+"k":"—")+'</div></div>';
   }
@@ -510,7 +643,11 @@ function drawRail(start,end,out,base,t0){
 
 /* ---------------- หมวด ---------------- */
 function drawCats(out,spent){
-  const sums={}; out.forEach(i=>sums[i.cat]=(sums[i.cat]||0)+i.jpy);
+  const sums={}, subs={};
+  out.forEach(i=>{
+    sums[i.cat]=(sums[i.cat]||0)+i.jpy;
+    if(i.sub){ (subs[i.cat]=subs[i.cat]||{})[i.sub]=(subs[i.cat][i.sub]||0)+i.jpy; }
+  });
   const rows=Object.entries(sums).sort((a,b)=>b[1]-a[1]);
   const leg=$("legend");
   if(!rows.length){ leg.innerHTML='<div class="skeleton">ยังไม่มีรายการค่าใช้จ่าย</div>'; $("donut").innerHTML=""; return; }
@@ -521,10 +658,17 @@ function drawCats(out,spent){
     off+=len;
   });
   $("donut").innerHTML='<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="สัดส่วนค่าใช้จ่ายแต่ละหมวด" style="transform:rotate(-90deg)">'+arcs+'</svg>';
-  leg.innerHTML=rows.map(([cat,v],i)=>
-    '<div class="leg"><span class="sw" style="background:'+colorFor(CAT_COLOR,cat,i)+'"></span>'+
-    '<span class="nm">'+esc(cat)+'</span><span class="vl">'+yen(v)+'</span>'+
-    '<span class="pc">'+(spent>0?(v/spent*100).toFixed(0):0)+'%</span></div>').join("");
+  leg.innerHTML=rows.map(([cat,v],i)=>{
+    let html='<div class="leg"><span class="sw" style="background:'+colorFor(CAT_COLOR,cat,i)+'"></span>'+
+      '<span class="nm">'+esc(cat)+'</span><span class="vl">'+yen(v)+'<small>'+baht(v)+'</small></span>'+
+      '<span class="pc">'+(spent>0?(v/spent*100).toFixed(0):0)+'%</span></div>';
+    const s=subs[cat];
+    if(s){
+      html+=Object.entries(s).sort((a,b)=>b[1]-a[1]).map(([nm,sv])=>
+        '<div class="leg-sub"><span class="nm">'+esc(nm)+'</span><span class="vl">'+yen(sv)+'</span></div>').join("");
+    }
+    return html;
+  }).join("");
 }
 
 /* ---------------- เคลียร์กับเพื่อน ---------------- */
@@ -540,11 +684,11 @@ function drawPeople(out,inc,spent){
     const put=inc.filter(i=>i.who===m).reduce((s,i)=>s+i.jpy,0);
     return {name:m,paid:paid+put,net:(paid+put)-share};
   });
-  box.innerHTML='<div class="person" style="border-bottom:2px solid var(--ink)"><span class="nm">หารกัน '+MEMBERS.length+' คน</span><span class="net">คนละ '+yen(share)+'</span></div>'+
+  box.innerHTML='<div class="person" style="border-bottom:1.5px solid var(--ink)"><span class="nm">หารกัน '+MEMBERS.length+' คน</span><span class="net">คนละ '+yen(share)+'<small>'+baht(share)+'</small></span></div>'+
     rows.map(r=>{
       const cls=r.net>1?"plus":(r.net<-1?"minus":"");
       const tag=r.net>1?"ควรได้คืน ":(r.net<-1?"ต้องจ่ายเพิ่ม ":"พอดี ");
-      return '<div class="person"><span class="nm">'+esc(r.name)+'</span><span class="paid">ออกไป '+yen(r.paid)+'</span><span class="net '+cls+'">'+tag+yen(Math.abs(r.net))+'</span></div>';
+      return '<div class="person"><span class="nm">'+esc(r.name)+'</span><span class="paid">ออกไป '+yen(r.paid)+'</span><span class="net '+cls+'">'+tag+yen(Math.abs(r.net))+'<small>'+baht(Math.abs(r.net))+'</small></span></div>';
     }).join("");
   const owe=rows.filter(r=>r.net<-1).map(r=>({n:r.name,v:-r.net})).sort((a,b)=>b.v-a.v);
   const get=rows.filter(r=>r.net>1).map(r=>({n:r.name,v:r.net})).sort((a,b)=>b.v-a.v);
@@ -566,13 +710,20 @@ function drawLedger(items,box,limit){
   const sorted=items.slice().sort((x,y)=>(y.date?y.date.getTime():0)-(x.date?x.date.getTime():0)).slice(0,limit);
   if(!sorted.length){ box.innerHTML='<div class="skeleton">ยังไม่มีรายการ ลองบันทึกรายการแรกดู</div>'; return; }
   box.innerHTML=sorted.map((i,idx)=>{
-    const col=i.isIn?"#009944":colorFor(CAT_COLOR,i.cat,idx);
+    const col=i.isIn?C_GREEN:colorFor(CAT_COLOR,i.cat,idx);
     const waiting=i.id&&pend.has(i.id);
-    return '<div class="tx'+(waiting?" pending":"")+'"><span class="tick" style="background:'+col+'"></span>'+
+    const editable=i.id&&!waiting;
+    return '<div class="tx'+(waiting?" pending":"")+'"'+(editable?' data-id="'+esc(i.id)+'" role="button" tabindex="0"':'')+'>'+
+      '<span class="tick" style="background:'+col+'"></span>'+
       '<span class="when">'+(i.date?shortDate(i.date):"—")+'</span>'+
-      '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":i.cat)+' · '+esc(i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
-      '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span></div>';
+      '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":(i.cat+(i.sub?" › "+i.sub:"")))+' · '+esc(i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
+      '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span>'+
+      (editable?'<span class="go">›</span>':'')+'</div>';
   }).join("");
+  box.querySelectorAll(".tx[data-id]").forEach(el=>{
+    el.addEventListener("click",()=>openEditor(el.dataset.id));
+    el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();openEditor(el.dataset.id);} });
+  });
 }
 
 /* ---------------- แผนที่ ---------------- */
@@ -587,7 +738,7 @@ function drawMap(){
 
   if(!MAP){
     MAP=L.map("map",{scrollWheelZoom:false}).setView([35.6812,139.7671],11);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
       {maxZoom:19,attribution:"© OpenStreetMap, © CARTO"}).addTo(MAP);
   }
   const days=[...new Set(list.filter(p=>p.date).map(p=>keyOf(p.date)))].sort();
@@ -609,7 +760,7 @@ function paintMarkers(){
   shown.forEach(p=>{
     const icon=L.divIcon({className:"",html:'<div class="pin" style="background:'+colorFor(PLACE_COLOR,p.type,0)+'"></div>',iconSize:[20,20],iconAnchor:[10,18]});
     L.marker([p.lat,p.lng],{icon}).addTo(GROUP).bindPopup(
-      "<b>"+esc(p.name)+"</b><br><span style='color:#5E6E7C'>"+esc(p.type)+(p.date?" · "+shortDate(p.date):"")+(p.time?" "+esc(p.time):"")+"</span>"+
+      "<b>"+esc(p.name)+"</b><br><span style='color:"+C_MUTED+"'>"+esc(p.type)+(p.date?" · "+shortDate(p.date):"")+(p.time?" "+esc(p.time):"")+"</span>"+
       (p.note?"<br>"+esc(p.note):"")+
       '<br><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'">เปิดนำทางใน Google Maps</a>');
   });
@@ -629,10 +780,27 @@ function buildCatChips(){
     '<button type="button" class="chip" data-cat="'+c+'" aria-pressed="'+(FORM.cat===c)+'">'+
     '<span class="sw" style="background:'+colorFor(CAT_COLOR,c,0)+'"></span>'+c+'</button>').join("");
   $("catChips").querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
-    FORM.cat=b.dataset.cat;
+    FORM.cat=b.dataset.cat; FORM.sub="";
     $("catChips").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
     b.setAttribute("aria-pressed","true");
+    buildSubChips();
   }));
+  buildSubChips();
+}
+function buildSubChips(){
+  const list=SUBCATS[FORM.cat];
+  const field=$("subField"), box=$("subChips"), other=$("subOther");
+  if(!list||FORM.kind==="เงินเข้า"){ field.style.display="none"; other.style.display="none"; return; }
+  field.style.display="block";
+  box.innerHTML=list.map(s=>'<button type="button" class="chip" data-sub="'+s+'" aria-pressed="'+(FORM.sub===s)+'">'+s+'</button>').join("");
+  box.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    FORM.sub=b.dataset.sub;
+    box.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    other.style.display=FORM.sub===OTHER?"block":"none";
+    if(FORM.sub===OTHER) other.focus();
+  }));
+  other.style.display=FORM.sub===OTHER?"block":"none";
 }
 function buildWhoChips(){
   const opts=["กองกลาง"].concat(MEMBERS);
@@ -644,10 +812,42 @@ function buildWhoChips(){
     b.setAttribute("aria-pressed","true");
   }));
 }
+/** แปลงจำนวนที่พิมพ์ให้เป็นเยนเสมอ ตามเรตที่ตั้งไว้ในชีต */
+function toJPY(v,cur){ return cur==="THB" ? (RATE? v/RATE : 0) : v; }
 function updateConv(){
   const v=num($("amt").value);
-  $("conv").textContent = !v ? "" :
-    (FORM.cur==="JPY" ? "≈ ฿"+fmt(v*RATE) : "≈ ¥"+fmt(RATE?v/RATE:0));
+  $("conv").innerHTML = !v ? "" :
+    (FORM.cur==="JPY"
+      ? "= <b>¥"+fmt(v)+"</b> · ฿"+fmt(v*RATE)
+      : "= <b>¥"+fmt(toJPY(v,"THB"))+"</b> · ฿"+fmt(v));
+  drawRateLine();
+}
+function drawRateLine(){
+  let html="เรต <b>฿"+RATE.toFixed(3)+"</b>/เยน";
+  if(LIVE_RATE){
+    const diff=Math.abs(LIVE_RATE-RATE)/RATE*100;
+    html+='<br><span class="live">ตลาดวันนี้ ฿'+LIVE_RATE.toFixed(3)+(diff>3?" ⚠":"")+'</span>';
+  }
+  $("rateline").innerHTML=html;
+}
+async function fetchLiveRate(){
+  const urls=["https://api.frankfurter.app/latest?from=JPY&to=THB",
+              "https://open.er-api.com/v6/latest/JPY"];
+  for(const u of urls){
+    try{
+      const r=await fetch(u); if(!r.ok) continue;
+      const d=await r.json();
+      const v=(d.rates&&d.rates.THB)||null;
+      if(v&&v>0&&v<5){ LIVE_RATE=v; drawRateLine(); return; }
+    }catch(e){ /* ไม่มีเน็ตหรือโดนบล็อกก็ข้ามไป ไม่ใช่เรื่องคอขาดบาดตาย */ }
+  }
+}
+function setCur(c){
+  FORM.cur=c;
+  $("curJPY").setAttribute("aria-pressed",c==="JPY");
+  $("curTHB").setAttribute("aria-pressed",c==="THB");
+  $("sym").textContent=c==="JPY"?"¥":"฿";
+  updateConv();
 }
 function setKind(k){
   FORM.kind=k;
@@ -656,19 +856,27 @@ function setKind(k){
   $("catField").style.display = k==="เงินเข้า" ? "none":"block";
   $("save").classList.toggle("out",k==="เงินออก");
   $("title").placeholder = k==="เงินเข้า" ? "เช่น ลงขันกองกลาง" : "เช่น ราเมงชินจูกุ";
+  buildSubChips();
 }
 function newId(){ return "T"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function subValue(sub,otherText){
+  if(!sub) return "";
+  return sub===OTHER ? (otherText.trim()||OTHER) : sub;
+}
 
 async function saveRow(){
   const amount=num($("amt").value);
   const st=$("status");
   if(amount<=0){ st.className="status bad"; st.textContent="ใส่จำนวนเงินก่อนนะ"; $("amt").focus(); return; }
+  const isIn=FORM.kind==="เงินเข้า";
+  const sub=isIn?"":subValue(FORM.sub,$("subOther").value);
   const row={
     "รหัส":newId(),
     "วันที่":$("date").value||keyOf(today0()),
     "ประเภท":FORM.kind,
-    "หมวด":FORM.kind==="เงินเข้า"?"":FORM.cat,
-    "รายการ":$("title").value.trim()||(FORM.kind==="เงินเข้า"?"เงินเข้า":FORM.cat),
+    "หมวด":isIn?"":FORM.cat,
+    "รายการย่อย":sub,
+    "รายการ":$("title").value.trim()||(isIn?"เงินเข้า":(sub||FORM.cat)),
     "จำนวนเงิน":amount,
     "สกุล":FORM.cur,
     "ผู้จ่าย":FORM.who,
@@ -679,7 +887,7 @@ async function saveRow(){
 
   PENDING.push(row);
   renderAll();
-  $("amt").value=""; $("title").value=""; $("memo").value=""; updateConv();
+  $("amt").value=""; $("title").value=""; $("memo").value=""; $("subOther").value=""; updateConv();
 
   try{
     const confirmed=await apiPost(row);
@@ -704,14 +912,160 @@ async function saveRow(){
   }
 }
 
+/* ---------------- แก้ไข / ลบรายการ ---------------- */
+let ED={id:null, kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", who:"กองกลาง"};
+
+function edChips(box,list,field,colored,after){
+  box.innerHTML=list.map(v=>'<button type="button" class="chip" data-v="'+esc(v)+'" aria-pressed="'+(ED[field]===v)+'">'+
+    (colored?'<span class="sw" style="background:'+colorFor(CAT_COLOR,v,0)+'"></span>':'')+esc(v)+'</button>').join("");
+  box.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    ED[field]=b.dataset.v;
+    box.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    if(after) after();
+  }));
+}
+function edBuildSub(){
+  const list=SUBCATS[ED.cat];
+  const field=$("edSubField"), other=$("edSubOther");
+  if(!list||ED.kind==="เงินเข้า"){ field.style.display="none"; other.style.display="none"; return; }
+  field.style.display="block";
+  edChips($("edSubChips"),list,"sub",false,()=>{
+    other.style.display=ED.sub===OTHER?"block":"none";
+    if(ED.sub===OTHER) other.focus();
+  });
+  other.style.display=ED.sub===OTHER?"block":"none";
+}
+function edSetKind(k){
+  ED.kind=k;
+  $("edOut").setAttribute("aria-pressed",k==="เงินออก");
+  $("edIn").setAttribute("aria-pressed",k==="เงินเข้า");
+  $("edCatField").style.display=k==="เงินเข้า"?"none":"block";
+  edBuildSub();
+}
+function edSetCur(c){
+  ED.cur=c;
+  $("edCurJPY").setAttribute("aria-pressed",c==="JPY");
+  $("edCurTHB").setAttribute("aria-pressed",c==="THB");
+  $("edSym").textContent=c==="JPY"?"¥":"฿";
+  edConvUpdate();
+}
+function edConvUpdate(){
+  const v=num($("edAmt").value);
+  $("edConv").innerHTML=!v?"":
+    (ED.cur==="JPY" ? "= <b>¥"+fmt(v)+"</b> · ฿"+fmt(v*RATE)
+                    : "= <b>¥"+fmt(toJPY(v,"THB"))+"</b> · ฿"+fmt(v));
+}
+function disarmDelete(){
+  const d=$("edDel"); d.classList.remove("arm"); d.textContent="ลบ";
+}
+
+function openEditor(id){
+  const raw=TX.find(r=>pick(r,"รหัส")===id);
+  if(!raw){ return; }
+  const it=normalize(raw);
+  ED.id=id;
+  ED.cat=it.cat; ED.who=it.who;
+
+  // รายการย่อยที่บันทึกไว้ อาจเป็นคำที่พิมพ์เองในช่องอื่น ๆ
+  const list=SUBCATS[it.cat]||[];
+  if(it.sub && list.indexOf(it.sub)<0){ ED.sub=OTHER; $("edSubOther").value=it.sub; }
+  else { ED.sub=it.sub||""; $("edSubOther").value=""; }
+
+  edChips($("edCatChips"),CATS,"cat",true,()=>{ ED.sub=""; $("edSubOther").value=""; edBuildSub(); });
+  edChips($("edWhoChips"),["กองกลาง"].concat(MEMBERS),"who",false);
+  edSetKind(it.isIn?"เงินเข้า":"เงินออก");
+  edSetCur((pick(raw,"สกุล","สกุลเงิน")||"JPY").toUpperCase().indexOf("THB")>=0?"THB":"JPY");
+
+  $("edAmt").value=pick(raw,"จำนวนเงิน","จำนวน","ยอด");
+  $("edTitleInput").value=it.title==="(ไม่ระบุ)"?"":it.title;
+  $("edMemo").value=it.note;
+  $("edDate").value=it.date?keyOf(it.date):keyOf(today0());
+  edConvUpdate();
+  disarmDelete();
+  $("edStatus").textContent=""; $("edStatus").className="status";
+  $("veil").classList.add("on");
+  document.body.style.overflow="hidden";
+}
+function closeEditor(){
+  $("veil").classList.remove("on");
+  document.body.style.overflow="";
+  ED.id=null;
+}
+
+async function saveEdit(){
+  const amount=num($("edAmt").value);
+  const st=$("edStatus");
+  if(amount<=0){ st.className="status bad"; st.textContent="ใส่จำนวนเงินก่อนนะ"; return; }
+  const isIn=ED.kind==="เงินเข้า";
+  const sub=isIn?"":subValue(ED.sub,$("edSubOther").value);
+  const row={
+    "รหัส":ED.id,
+    "วันที่":$("edDate").value||keyOf(today0()),
+    "ประเภท":ED.kind,
+    "หมวด":isIn?"":ED.cat,
+    "รายการย่อย":sub,
+    "รายการ":$("edTitleInput").value.trim()||(isIn?"เงินเข้า":(sub||ED.cat)),
+    "จำนวนเงิน":amount,
+    "สกุล":ED.cur,
+    "ผู้จ่าย":ED.who,
+    "หมายเหตุ":$("edMemo").value.trim()
+  };
+  $("edSave").disabled=true;
+  st.className="status wait"; st.textContent="กำลังบันทึก…";
+  // แก้ในหน้าจอก่อนเลย ตัวเลขจะได้ขยับทันที
+  const idx=TX.findIndex(r=>pick(r,"รหัส")===ED.id);
+  if(idx>=0) Object.keys(row).forEach(k=>{ if(k in TX[idx]) TX[idx][k]=String(row[k]); });
+  renderAll();
+  try{
+    await apiPost(row,"update");
+    closeEditor();
+    setTimeout(load,1500);
+  }catch(e){
+    st.className="status bad"; st.textContent="แก้ไขไม่สำเร็จ: "+(e.message||e);
+    load();
+  }finally{ $("edSave").disabled=false; }
+}
+
+async function deleteRow(){
+  const d=$("edDel"), st=$("edStatus");
+  if(!d.classList.contains("arm")){
+    d.classList.add("arm"); d.textContent="แน่ใจนะ";
+    st.className="status wait"; st.textContent="กดปุ่มแดงอีกครั้งเพื่อลบถาวร";
+    setTimeout(()=>{ if(ED.id){ disarmDelete(); if(st.textContent.indexOf("กดปุ่มแดง")===0){st.textContent="";} } },5000);
+    return;
+  }
+  d.disabled=true;
+  st.className="status wait"; st.textContent="กำลังลบ…";
+  const id=ED.id;
+  TX=TX.filter(r=>pick(r,"รหัส")!==id);
+  renderAll();
+  try{
+    await apiPost({"รหัส":id},"delete");
+    closeEditor();
+    setTimeout(load,1500);
+  }catch(e){
+    st.className="status bad"; st.textContent="ลบไม่สำเร็จ: "+(e.message||e);
+    load();
+  }finally{ d.disabled=false; }
+}
+
+$("edClose").addEventListener("click",closeEditor);
+$("veil").addEventListener("click",ev=>{ if(ev.target===$("veil")) closeEditor(); });
+document.addEventListener("keydown",ev=>{ if(ev.key==="Escape"&&ED.id) closeEditor(); });
+$("edOut").addEventListener("click",()=>edSetKind("เงินออก"));
+$("edIn").addEventListener("click",()=>edSetKind("เงินเข้า"));
+$("edCurJPY").addEventListener("click",()=>edSetCur("JPY"));
+$("edCurTHB").addEventListener("click",()=>edSetCur("THB"));
+$("edAmt").addEventListener("input",edConvUpdate);
+$("edSave").addEventListener("click",saveEdit);
+$("edDel").addEventListener("click",deleteRow);
+
 /* ---------------- เชื่อมปุ่ม ---------------- */
 $("kOut").addEventListener("click",()=>setKind("เงินออก"));
 $("kIn").addEventListener("click",()=>setKind("เงินเข้า"));
-$("cur").addEventListener("click",()=>{
-  FORM.cur=FORM.cur==="JPY"?"THB":"JPY";
-  const c=$("cur"); c.dataset.cur=FORM.cur; c.textContent=FORM.cur==="JPY"?"¥":"฿";
-  updateConv();
-});
+$("curJPY").addEventListener("click",()=>setCur("JPY"));
+$("curTHB").addEventListener("click",()=>setCur("THB"));
 $("amt").addEventListener("input",updateConv);
 $("save").addEventListener("click",saveRow);
 $("reload").addEventListener("click",load);
@@ -730,8 +1084,11 @@ $("tab-sum").addEventListener("click",()=>showTab("sum"));
 
 $("date").value=keyOf(today0());
 setKind("เงินออก");
+setCur("JPY");
 buildCatChips();
 buildWhoChips();
+drawRateLine();
+fetchLiveRate();
 load();
 setInterval(load,CONFIG.REFRESH_SECONDS*1000);
 </script>
