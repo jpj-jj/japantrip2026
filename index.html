@@ -86,6 +86,23 @@ h2{font-size:17px;margin-bottom:13px}
 .rateline b{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink)}
 .rateline .live{color:var(--l-blue)}
 #subOther{margin-top:9px}
+.h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.h2row h2{margin-bottom:0}
+.src{padding:13px 0;border-bottom:1px solid var(--hair)}
+.src:last-child{border-bottom:0;padding-bottom:0}
+.src-top{display:flex;align-items:baseline;gap:9px}
+.src-top .sw{width:10px;height:10px;border-radius:2px;flex:0 0 10px;align-self:center}
+.src-top .nm{flex:1;font-weight:500;font-size:14px}
+.src-top .vl{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px}
+.src-top .vl.neg{color:var(--l-red)}
+.bar-track{height:7px;border-radius:4px;background:var(--warm);margin-top:9px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.src-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.src-foot .mono{font-family:"IBM Plex Mono",monospace}
+.cfg-row{display:flex;align-items:center;gap:10px;margin-top:14px}
+.cfg-row label{flex:1;font-size:14px}
+.cfg-row input{width:130px;text-align:right;font-family:"IBM Plex Mono",monospace}
+.cfg-note{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
 .leg-sub{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding-left:19px}
 .leg-sub .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .leg-sub .vl{font-family:"IBM Plex Mono",monospace;font-size:12px}
@@ -285,6 +302,11 @@ input[type=text],input[type=date]{
         <input id="subOther" type="text" placeholder="ระบุรายการย่อย" style="display:none">
       </div>
 
+      <div class="fld" id="srcField">
+        <label>จ่ายด้วย</label>
+        <div class="chips" id="srcChips"></div>
+      </div>
+
       <div class="fld">
         <label for="title">รายการ</label>
         <input id="title" type="text" placeholder="เช่น ราเมงชินจูกุ">
@@ -341,6 +363,17 @@ input[type=text],input[type=date]{
         <div class="rail"><div class="rail-inner" id="rail"></div></div>
       </div>
     </div>
+  </section>
+
+  <section>
+    <div class="h2row">
+      <div>
+        <div class="eyebrow">Funding</div>
+        <h2>แยกตามแหล่งเงิน</h2>
+      </div>
+      <button class="btn" id="openCfg" type="button">ตั้งค่างบ</button>
+    </div>
+    <div class="card" id="srcBox"><div class="skeleton">กำลังโหลด…</div></div>
   </section>
 
   <section>
@@ -413,6 +446,11 @@ input[type=text],input[type=date]{
       <input id="edSubOther" type="text" placeholder="ระบุรายการย่อย" style="display:none">
     </div>
 
+    <div class="fld" id="edSrcField">
+      <label>จ่ายด้วย</label>
+      <div class="chips" id="edSrcChips"></div>
+    </div>
+
     <div class="fld">
       <label for="edTitleInput">รายการ</label>
       <input id="edTitleInput" type="text">
@@ -436,6 +474,25 @@ input[type=text],input[type=date]{
   </div>
 </div>
 
+<div class="veil" id="veil2" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
+  <div class="sheet">
+    <div class="sheet-top">
+      <h3 id="cfgTitle">ตั้งค่างบและเรตแลก</h3>
+      <button class="x" id="cfgClose" type="button" aria-label="ปิด">&times;</button>
+    </div>
+
+    <div class="cfg-row"><label for="bCash">งบเงินสด (เยน)</label><input id="bCash" type="text" inputmode="decimal"></div>
+    <div class="cfg-row"><label for="bTravel">งบ Travel Card (เยน)</label><input id="bTravel" type="text" inputmode="decimal"></div>
+    <div class="cfg-row"><label for="bCredit">งบบัตรเครดิต (เยน)</label><input id="bCredit" type="text" inputmode="decimal"></div>
+    <div class="cfg-row"><label for="bRate">เรตแลก (บาทต่อ 1 เยน)</label><input id="bRate" type="text" inputmode="decimal"></div>
+
+    <div class="cfg-note">งบตั้งต้นรวมจะเท่ากับสามยอดนี้บวกกัน ถ้าเติมเงินเข้าบัตรระหว่างทริป ให้กลับมาแก้ตัวเลขตรงนี้ได้เลย</div>
+
+    <button class="save" id="cfgSave" type="button">บันทึกการตั้งค่า</button>
+    <div class="status" id="cfgStatus"></div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* =====================================================================
@@ -456,6 +513,9 @@ const SUBCATS = {
 };
 // รายการเก่าที่บันทึกไว้ว่า "อาหาร" ให้นับรวมกับหมวดใหม่
 const CAT_ALIAS = {"อาหาร":"อาหารและเครื่องดื่ม","อื่นๆ":OTHER};
+const SOURCES = ["เงินสด","Travel Card","บัตรเครดิต"];
+const SRC_COLOR = {"เงินสด":"#6E8B62","Travel Card":"#5F7F8C","บัตรเครดิต":"#9A7B8E","ไม่ระบุ":"#9A968E"};
+const SRC_KEY = {"เงินสด":"งบเงินสด","Travel Card":"งบ Travel Card","บัตรเครดิต":"งบบัตรเครดิต"};
 const canonCat = c => CAT_ALIAS[c] || c || OTHER;
 const CAT_COLOR = {"เดินทาง":"#7C93A0","ที่พัก":"#5F7F8C","อาหารและเครื่องดื่ม":"#C4874F","อาหาร":"#C4874F","ค่าเข้าชม":"#A79A50","ช้อปปิ้ง":"#9A7B8E","อื่น ๆ":"#9A968E","อื่นๆ":"#9A968E"};
 const PLACE_COLOR = {"ที่พัก":"#5F7F8C","ที่เที่ยว":"#A6483C","ร้านอาหาร":"#C4874F","สถานี":"#6E8B62","ช้อปปิ้ง":"#9A7B8E"};
@@ -466,7 +526,7 @@ const colorFor=(m,k,i)=> m[k] || SPARE[(i+String(k||"").length)%SPARE.length];
 /* ---------------- state ---------------- */
 let RATE=0.24, LIVE_RATE=null, MEMBERS=[], SETTINGS={}, TX=[], PLACES=[], PENDING=[];
 let MAP=null, GROUP=null, ACTIVE_DAY="all", MAP_READY=false;
-let FORM={kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", who:""};
+let FORM={kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", src:"เงินสด", who:""};
 
 /* ---------------- utils ---------------- */
 const $=id=>document.getElementById(id);
@@ -567,6 +627,7 @@ function normalize(r){
     isIn:type.indexOf("เข้า")>=0,
     cat:canonCat(pick(r,"หมวด")),
     sub:pick(r,"รายการย่อย"),
+    src:pick(r,"แหล่งเงิน"),
     title:pick(r,"รายการ","รายละเอียด")||"(ไม่ระบุ)",
     jpy: isTHB ? (RATE?raw/RATE:0) : raw,
     who:pick(r,"ผู้จ่าย","คนจ่าย")||"กองกลาง",
@@ -578,7 +639,10 @@ function normalize(r){
 function renderAll(){
   const name=SETTINGS["ชื่อทริป"]||"ทริปญี่ปุ่น";
   RATE=num(SETTINGS["เรตแลก"])||0.24;
-  const budget=num(SETTINGS["งบตั้งต้น"]);
+  const srcBudget={};
+  SOURCES.forEach(x=>srcBudget[x]=num(SETTINGS[SRC_KEY[x]]));
+  const srcTotal=SOURCES.reduce((a,x)=>a+srcBudget[x],0);
+  const budget = srcTotal>0 ? srcTotal : num(SETTINGS["งบตั้งต้น"]);
   const start=parseDate(SETTINGS["วันเริ่ม"]), end=parseDate(SETTINGS["วันสิ้นสุด"]);
   MEMBERS=(SETTINGS["สมาชิก"]||"").split(",").map(s=>s.trim()).filter(Boolean);
 
@@ -609,6 +673,7 @@ function renderAll(){
   const daysLeft=end?Math.max(1,Math.round((end-t0)/DAY_MS)+1):1;
   $("fPerDay").innerHTML=remain>0?(yen(remain/daysLeft)+"<small>"+baht(remain/daysLeft)+"</small>"):"¥0";
 
+  drawSources(out,srcBudget,srcTotal);
   drawRail(start,end,out,base,t0);
   drawCats(out,spent);
   drawPeople(out,inc,spent);
@@ -716,7 +781,7 @@ function drawLedger(items,box,limit){
     return '<div class="tx'+(waiting?" pending":"")+'"'+(editable?' data-id="'+esc(i.id)+'" role="button" tabindex="0"':'')+'>'+
       '<span class="tick" style="background:'+col+'"></span>'+
       '<span class="when">'+(i.date?shortDate(i.date):"—")+'</span>'+
-      '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":(i.cat+(i.sub?" › "+i.sub:"")))+' · '+esc(i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
+      '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":(i.cat+(i.sub?" › "+i.sub:"")))+' · '+esc(i.src||i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
       '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span>'+
       (editable?'<span class="go">›</span>':'')+'</div>';
   }).join("");
@@ -802,6 +867,18 @@ function buildSubChips(){
   }));
   other.style.display=FORM.sub===OTHER?"block":"none";
 }
+function buildSrcChips(){
+  const field=$("srcField"), box=$("srcChips");
+  if(FORM.kind==="เงินเข้า"){ field.style.display="none"; return; }
+  field.style.display="block";
+  box.innerHTML=SOURCES.map(x=>'<button type="button" class="chip" data-src="'+esc(x)+'" aria-pressed="'+(FORM.src===x)+'">'+
+    '<span class="sw" style="background:'+SRC_COLOR[x]+'"></span>'+esc(x)+'</button>').join("");
+  box.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    FORM.src=b.dataset.src;
+    box.querySelectorAll(".chip").forEach(y=>y.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  }));
+}
 function buildWhoChips(){
   const opts=["กองกลาง"].concat(MEMBERS);
   if(!FORM.who) FORM.who=opts[0];
@@ -857,6 +934,7 @@ function setKind(k){
   $("save").classList.toggle("out",k==="เงินออก");
   $("title").placeholder = k==="เงินเข้า" ? "เช่น ลงขันกองกลาง" : "เช่น ราเมงชินจูกุ";
   buildSubChips();
+  buildSrcChips();
 }
 function newId(){ return "T"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function subValue(sub,otherText){
@@ -876,6 +954,7 @@ async function saveRow(){
     "ประเภท":FORM.kind,
     "หมวด":isIn?"":FORM.cat,
     "รายการย่อย":sub,
+    "แหล่งเงิน":isIn?"":FORM.src,
     "รายการ":$("title").value.trim()||(isIn?"เงินเข้า":(sub||FORM.cat)),
     "จำนวนเงิน":amount,
     "สกุล":FORM.cur,
@@ -912,8 +991,78 @@ async function saveRow(){
   }
 }
 
+/* ---------------- แยกตามแหล่งเงิน ---------------- */
+function drawSources(out,srcBudget,srcTotal){
+  const box=$("srcBox");
+  const spentBy={};
+  out.forEach(i=>{ const k=SOURCES.indexOf(i.src)>=0?i.src:"ไม่ระบุ"; spentBy[k]=(spentBy[k]||0)+i.jpy; });
+
+  if(srcTotal<=0 && !Object.keys(spentBy).length){
+    box.innerHTML='<div class="skeleton">กด “ตั้งค่างบ” มุมขวาบน เพื่อใส่ยอดของเงินสด Travel Card และบัตรเครดิต</div>';
+    return;
+  }
+  const list=SOURCES.slice();
+  if(spentBy["ไม่ระบุ"]) list.push("ไม่ระบุ");
+
+  box.innerHTML=list.map(x=>{
+    const b=srcBudget[x]||0, sp=spentBy[x]||0, left=b-sp;
+    const pct=b>0?Math.min(100,sp/b*100):(sp>0?100:0);
+    const over=b>0&&sp>b;
+    return '<div class="src">'+
+      '<div class="src-top"><span class="sw" style="background:'+SRC_COLOR[x]+'"></span>'+
+        '<span class="nm">'+esc(x)+'</span>'+
+        '<span class="vl'+(over?" neg":"")+'">'+(b>0?yen(left):"—")+'</span></div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+(over?"#A6483C":SRC_COLOR[x])+'"></div></div>'+
+      '<div class="src-foot"><span class="mono">ใช้ '+yen(sp)+(b>0?" / "+yen(b):"")+'</span>'+
+        '<span class="mono">'+(b>0?("เหลือ "+baht(left)+" · "+pct.toFixed(0)+"%"):"ยังไม่ได้ตั้งงบ")+'</span></div>'+
+    '</div>';
+  }).join("");
+}
+
+/* ---------------- ตั้งค่างบจากหน้าเว็บ ---------------- */
+function openCfg(){
+  $("bCash").value=num(SETTINGS[SRC_KEY["เงินสด"]])||"";
+  $("bTravel").value=num(SETTINGS[SRC_KEY["Travel Card"]])||"";
+  $("bCredit").value=num(SETTINGS[SRC_KEY["บัตรเครดิต"]])||"";
+  $("bRate").value=RATE;
+  $("cfgStatus").textContent=""; $("cfgStatus").className="status";
+  $("veil2").classList.add("on");
+  document.body.style.overflow="hidden";
+}
+function closeCfg(){
+  $("veil2").classList.remove("on");
+  document.body.style.overflow="";
+}
+async function saveCfg(){
+  const st=$("cfgStatus");
+  const rate=num($("bRate").value);
+  if(rate<=0){ st.className="status bad"; st.textContent="เรตแลกต้องมากกว่าศูนย์"; return; }
+  const settings={};
+  settings[SRC_KEY["เงินสด"]]=num($("bCash").value);
+  settings[SRC_KEY["Travel Card"]]=num($("bTravel").value);
+  settings[SRC_KEY["บัตรเครดิต"]]=num($("bCredit").value);
+  settings["เรตแลก"]=rate;
+
+  $("cfgSave").disabled=true;
+  st.className="status wait"; st.textContent="กำลังบันทึก…";
+  Object.keys(settings).forEach(k=>SETTINGS[k]=String(settings[k]));
+  renderAll();
+  try{
+    await apiPost(settings,"settings");
+    closeCfg();
+    setTimeout(load,1500);
+  }catch(e){
+    st.className="status bad"; st.textContent="บันทึกไม่สำเร็จ: "+(e.message||e);
+    load();
+  }finally{ $("cfgSave").disabled=false; }
+}
+$("openCfg").addEventListener("click",openCfg);
+$("cfgClose").addEventListener("click",closeCfg);
+$("cfgSave").addEventListener("click",saveCfg);
+$("veil2").addEventListener("click",ev=>{ if(ev.target===$("veil2")) closeCfg(); });
+
 /* ---------------- แก้ไข / ลบรายการ ---------------- */
-let ED={id:null, kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", who:"กองกลาง"};
+let ED={id:null, kind:"เงินออก", cur:"JPY", cat:"อาหารและเครื่องดื่ม", sub:"", src:"เงินสด", who:"กองกลาง"};
 
 function edChips(box,list,field,colored,after){
   box.innerHTML=list.map(v=>'<button type="button" class="chip" data-v="'+esc(v)+'" aria-pressed="'+(ED[field]===v)+'">'+
@@ -941,6 +1090,7 @@ function edSetKind(k){
   $("edOut").setAttribute("aria-pressed",k==="เงินออก");
   $("edIn").setAttribute("aria-pressed",k==="เงินเข้า");
   $("edCatField").style.display=k==="เงินเข้า"?"none":"block";
+  $("edSrcField").style.display=k==="เงินเข้า"?"none":"block";
   edBuildSub();
 }
 function edSetCur(c){
@@ -973,6 +1123,8 @@ function openEditor(id){
   else { ED.sub=it.sub||""; $("edSubOther").value=""; }
 
   edChips($("edCatChips"),CATS,"cat",true,()=>{ ED.sub=""; $("edSubOther").value=""; edBuildSub(); });
+  ED.src=SOURCES.indexOf(it.src)>=0?it.src:SOURCES[0];
+  edChips($("edSrcChips"),SOURCES,"src",false);
   edChips($("edWhoChips"),["กองกลาง"].concat(MEMBERS),"who",false);
   edSetKind(it.isIn?"เงินเข้า":"เงินออก");
   edSetCur((pick(raw,"สกุล","สกุลเงิน")||"JPY").toUpperCase().indexOf("THB")>=0?"THB":"JPY");
@@ -1005,6 +1157,7 @@ async function saveEdit(){
     "ประเภท":ED.kind,
     "หมวด":isIn?"":ED.cat,
     "รายการย่อย":sub,
+    "แหล่งเงิน":isIn?"":ED.src,
     "รายการ":$("edTitleInput").value.trim()||(isIn?"เงินเข้า":(sub||ED.cat)),
     "จำนวนเงิน":amount,
     "สกุล":ED.cur,
@@ -1087,6 +1240,7 @@ setKind("เงินออก");
 setCur("JPY");
 buildCatChips();
 buildWhoChips();
+buildSrcChips();
 drawRateLine();
 fetchLiveRate();
 load();
