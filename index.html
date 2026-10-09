@@ -471,7 +471,7 @@ input[type=text],input[type=date]{
     <div class="eyebrow">Ledger</div>
     <h2>รายการทั้งหมด</h2>
     <div class="card" id="txlist"><div class="skeleton">กำลังโหลด…</div></div>
-    <div class="foot"><span id="stamp">—</span><button class="btn" id="reload" type="button">ดึงข้อมูลใหม่</button></div>
+    <div class="foot"><span><span id="stamp">—</span> · เวอร์ชัน 6</span><button class="btn" id="reload" type="button">ดึงข้อมูลใหม่</button></div>
   </section>
 </div>
 </div>
@@ -907,14 +907,21 @@ function drawLedger(items,box,limit){
       (editable?'<span class="go">›</span>':'')+'</div>';
   }).join("");
   box.querySelectorAll(".tx[data-id]").forEach(el=>{
-    el.addEventListener("click",()=>openEditor(el.dataset.id));
+    el.addEventListener("click",ev=>{
+      if(ev.target.closest&&ev.target.closest(".clip")) return;   // กดคลิป = ดูรูป ไม่ใช่แก้ไข
+      openEditor(el.dataset.id);
+    });
     el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();openEditor(el.dataset.id);} });
   });
   // กดคลิปแล้วดูรูปเลย ไม่ต้องเปิดหน้าต่างแก้ไข
-  box.querySelectorAll(".clip").forEach(b=>b.addEventListener("click",ev=>{
-    ev.stopPropagation();
-    openLightbox(evIds(b.dataset.ev), b.dataset.ti);
-  }));
+  box.querySelectorAll(".clip").forEach(b=>{
+    ["click","touchend"].forEach(evt=>b.addEventListener(evt,ev=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+      openLightbox(evIds(b.dataset.ev), b.dataset.ti);
+    }));
+  });
 }
 
 /* ---------------- แผนที่ ---------------- */
