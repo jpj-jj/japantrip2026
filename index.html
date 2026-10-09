@@ -125,7 +125,39 @@ h2{font-size:17px;margin-bottom:13px}
   position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;
   background:rgba(55,53,47,.72);color:#FBFAF7;font-size:14px;line-height:1;cursor:pointer;padding:0;
 }
-.tx .clip{flex:0 0 auto;color:var(--l-blue);font-size:13px;line-height:1}
+.tx .clip{
+  flex:0 0 auto;color:var(--l-blue);font-size:14px;line-height:1;
+  background:transparent;border:1px solid var(--hair);border-radius:7px;
+  padding:5px 7px;cursor:pointer;font-family:inherit;
+}
+.tx .clip:hover{background:var(--card);border-color:var(--l-blue)}
+
+/* ---------- ดูรูปหลักฐานเต็มจอ ---------- */
+.lb{position:fixed;inset:0;z-index:1200;background:rgba(32,30,27,.94);display:none;flex-direction:column}
+.lb.on{display:flex}
+.lb-bar{display:flex;align-items:center;gap:10px;padding:12px var(--pad);color:#E4E0D8;flex:0 0 auto}
+.lb-bar .t{flex:1;min-width:0;font-family:"Bai Jamjuree",sans-serif;font-weight:600;font-size:15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-bar .n{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#A9A296}
+.lb-bar .x{color:#E4E0D8;font-size:28px}
+.lb-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px 8px;position:relative}
+.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;background:#FBFAF7}
+.lb-stage .ld{position:absolute;color:#A9A296;font-size:13.5px}
+.lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;
+  border:0;background:rgba(251,250,247,.9);color:#37352F;font-size:22px;line-height:1;cursor:pointer;
+}
+.lb-nav.prev{left:10px}
+.lb-nav.next{right:10px}
+.lb-foot{flex:0 0 auto;padding:0 var(--pad) 18px;display:flex;gap:10px;align-items:center;justify-content:center}
+.lb-foot a{
+  color:#E4E0D8;font-size:13px;text-decoration:none;border:1px solid #57534B;
+  border-radius:999px;padding:8px 16px;
+}
+.lb-foot a:hover{background:#45413A}
+.lb-dots{display:flex;gap:6px;justify-content:center;padding-bottom:10px;flex:0 0 auto}
+.lb-dots span{width:7px;height:7px;border-radius:50%;background:#57534B}
+.lb-dots span.on{background:#E4E0D8}
 .ev-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
 .ev{
   display:block;width:84px;height:84px;border-radius:9px;overflow:hidden;
@@ -549,6 +581,24 @@ input[type=text],input[type=date]{
   </div>
 </div>
 
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="หลักฐานการจ่าย">
+  <div class="lb-bar">
+    <span class="t" id="lbTitle">หลักฐาน</span>
+    <span class="n" id="lbCount"></span>
+    <button class="x" id="lbClose" type="button" aria-label="ปิด">&times;</button>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <span class="ld" id="lbLoad">กำลังโหลดรูป…</span>
+    <img id="lbImg" alt="หลักฐานการจ่าย">
+    <button class="lb-nav prev" id="lbPrev" type="button" aria-label="รูปก่อนหน้า">&#8249;</button>
+    <button class="lb-nav next" id="lbNext" type="button" aria-label="รูปถัดไป">&#8250;</button>
+  </div>
+  <div class="lb-dots" id="lbDots"></div>
+  <div class="lb-foot">
+    <a id="lbOpen" href="#" target="_blank" rel="noopener">เปิดใน Google Drive</a>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* =====================================================================
@@ -853,13 +903,18 @@ function drawLedger(items,box,limit){
       '<span class="when">'+(i.date?shortDate(i.date):"—")+'</span>'+
       '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":(i.cat+(i.sub?" › "+i.sub:"")))+' · '+esc(i.src||i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
       '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span>'+
-      (evIds(i.ev).length?'<span class="clip" title="มีหลักฐานแนบ">&#128206;</span>':'')+
+      (evIds(i.ev).length?'<button class="clip" type="button" data-ev="'+esc(i.ev)+'" data-ti="'+esc(i.title)+'" title="ดูหลักฐาน">&#128206;'+(evIds(i.ev).length>1?' '+evIds(i.ev).length:'')+'</button>':'')+
       (editable?'<span class="go">›</span>':'')+'</div>';
   }).join("");
   box.querySelectorAll(".tx[data-id]").forEach(el=>{
     el.addEventListener("click",()=>openEditor(el.dataset.id));
     el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();openEditor(el.dataset.id);} });
   });
+  // กดคลิปแล้วดูรูปเลย ไม่ต้องเปิดหน้าต่างแก้ไข
+  box.querySelectorAll(".clip").forEach(b=>b.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    openLightbox(evIds(b.dataset.ev), b.dataset.ti);
+  }));
 }
 
 /* ---------------- แผนที่ ---------------- */
@@ -1143,11 +1198,14 @@ function drawKeptEv(){
   }
   wrap.innerHTML=EV_KEEP.map((id,i)=>
     '<div class="shot" style="width:84px;height:84px">'+
-      '<a class="ev" href="'+evOpen(id)+'" target="_blank" rel="noopener">'+
+      '<button class="ev" type="button" data-i="'+i+'" style="border:0;padding:0;cursor:pointer" aria-label="ดูรูปเต็ม">'+
         '<img src="'+evThumb(id)+'" alt="หลักฐาน" loading="lazy">'+
-      '</a>'+
+      '</button>'+
       '<button class="rm" type="button" data-i="'+i+'" aria-label="เอาออกจากรายการนี้">&times;</button>'+
     '</div>').join("");
+  wrap.querySelectorAll(".ev").forEach(b=>b.addEventListener("click",()=>{
+    openLightbox(EV_KEEP, $("edTitleInput").value||"หลักฐาน", +b.dataset.i);
+  }));
   wrap.querySelectorAll(".rm").forEach(b=>b.addEventListener("click",()=>{
     EV_KEEP.splice(+b.dataset.i,1); drawKeptEv();
   }));
@@ -1155,6 +1213,68 @@ function drawKeptEv(){
 
 $("shotInput").addEventListener("change",e=>onPick("rec",e.target));
 $("edShotInput").addEventListener("change",e=>onPick("ed",e.target));
+
+/* ---------------- ดูรูปหลักฐานเต็มจอ ---------------- */
+let LB={ids:[], i:0, title:""};
+
+function openLightbox(ids,title,start){
+  if(!ids||!ids.length) return;
+  LB={ids:ids, i:Math.min(Math.max(start||0,0),ids.length-1), title:title||"หลักฐาน"};
+  $("lb").classList.add("on");
+  document.body.style.overflow="hidden";
+  showLbShot();
+}
+function closeLightbox(){
+  $("lb").classList.remove("on");
+  document.body.style.overflow= ($("veil").classList.contains("on")?"hidden":"");
+  $("lbImg").removeAttribute("src");
+}
+function showLbShot(){
+  const id=LB.ids[LB.i], many=LB.ids.length>1;
+  $("lbTitle").textContent=LB.title;
+  $("lbCount").textContent=many?(LB.i+1)+" / "+LB.ids.length:"";
+  $("lbPrev").style.display=many?"block":"none";
+  $("lbNext").style.display=many?"block":"none";
+  $("lbDots").innerHTML=many?LB.ids.map((x,n)=>'<span class="'+(n===LB.i?"on":"")+'"></span>').join(""):"";
+  $("lbOpen").href=evOpen(id);
+
+  const img=$("lbImg"), load=$("lbLoad");
+  img.style.visibility="hidden";
+  load.textContent="กำลังโหลดรูป…"; load.style.display="block";
+  img.onload=()=>{ load.style.display="none"; img.style.visibility="visible"; };
+  img.onerror=()=>{
+    load.textContent="โหลดรูปไม่ขึ้น กดปุ่มข้างล่างเพื่อเปิดใน Google Drive";
+    load.style.display="block";
+  };
+  img.src="https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1600";
+}
+function stepLb(d){
+  if(LB.ids.length<2) return;
+  LB.i=(LB.i+d+LB.ids.length)%LB.ids.length;
+  showLbShot();
+}
+$("lbClose").addEventListener("click",closeLightbox);
+$("lbPrev").addEventListener("click",()=>stepLb(-1));
+$("lbNext").addEventListener("click",()=>stepLb(1));
+$("lb").addEventListener("click",ev=>{ if(ev.target===$("lb")||ev.target===$("lbStage")) closeLightbox(); });
+document.addEventListener("keydown",ev=>{
+  if(!$("lb").classList.contains("on")) return;
+  if(ev.key==="Escape") closeLightbox();
+  if(ev.key==="ArrowLeft") stepLb(-1);
+  if(ev.key==="ArrowRight") stepLb(1);
+});
+// ปัดนิ้วบนมือถือ
+(function(){
+  let x0=null;
+  const st=$("lbStage");
+  st.addEventListener("touchstart",e=>{ x0=e.touches[0].clientX; },{passive:true});
+  st.addEventListener("touchend",e=>{
+    if(x0===null) return;
+    const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>45) stepLb(dx<0?1:-1);
+    x0=null;
+  },{passive:true});
+})();
 
 /* ---------------- แยกตามแหล่งเงิน ---------------- */
 function drawSources(out,srcBudget,srcTotal){
