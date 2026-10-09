@@ -16,7 +16,8 @@
   --warm:#EDE9E1;
   --l-red:#A6483C; --l-green:#6E8B62; --l-blue:#5F7F8C; --l-orange:#C4874F;
   --l-yellow:#A79A50; --l-purple:#9A7B8E; --l-teal:#7C93A0; --l-gray:#9A968E;
-  --t-rec:#C4874F; --t-sum:#5F7F8C;
+  --t-rec:#C4874F; --t-sum:#5F7F8C; --t-map:#6E8B62;
+  --l-thb:#3F6B9E;
   --r:14px; --pad:16px;
 }
 *{box-sizing:border-box}
@@ -57,6 +58,8 @@ a{color:var(--l-blue)}
 }
 #tab-rec[aria-selected="true"]{color:var(--t-rec);border-bottom-color:var(--t-rec);background:var(--card)}
 #tab-sum[aria-selected="true"]{color:var(--t-sum);border-bottom-color:var(--t-sum);background:var(--card)}
+#tab-map[aria-selected="true"]{color:var(--t-map);border-bottom-color:var(--t-map);background:var(--card)}
+.seg button{font-size:14px}
 
 .pane{display:none}
 .pane.on{display:block}
@@ -103,12 +106,40 @@ h2{font-size:17px;margin-bottom:13px}
 .cfg-row label{flex:1;font-size:14px}
 .cfg-row input{width:130px;text-align:right;font-family:"IBM Plex Mono",monospace}
 .cfg-note{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
+
+/* ---------- เงินบาทเป็นสีน้ำเงิน ---------- */
+.thb{color:var(--l-thb)}
+.conv b.thb{color:var(--l-thb)}
+
+/* ---------- แนบหลักฐาน ---------- */
+.drop{
+  border:1.5px dashed var(--hair);border-radius:10px;padding:14px;text-align:center;
+  cursor:pointer;background:var(--card);color:var(--muted);font-size:13.5px;
+}
+.drop:hover{border-color:var(--l-blue);color:var(--ink)}
+.drop input{display:none}
+.shots{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.shot{position:relative;width:74px;height:74px;border-radius:9px;overflow:hidden;border:1px solid var(--hair);background:var(--warm)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .rm{
+  position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;
+  background:rgba(55,53,47,.72);color:#FBFAF7;font-size:14px;line-height:1;cursor:pointer;padding:0;
+}
+.tx .clip{flex:0 0 auto;color:var(--l-blue);font-size:13px;line-height:1}
+.ev-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.ev{
+  display:block;width:84px;height:84px;border-radius:9px;overflow:hidden;
+  border:1px solid var(--hair);background:var(--warm);
+}
+.ev img{width:100%;height:100%;object-fit:cover;display:block}
+.upnote{font-size:11.5px;color:var(--muted);margin-top:7px;line-height:1.5}
 .leg-sub{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding-left:19px}
 .leg-sub .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .leg-sub .vl{font-family:"IBM Plex Mono",monospace;font-size:12px}
 .leg .vl small,.person .net small,.fact .v small{
-  display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);font-weight:400;
+  display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--l-thb);font-weight:400;
 }
+.fact .v small.plain{color:var(--muted)}
 .leg .vl{text-align:right}
 #amt{
   flex:1;min-width:0;border:0;outline:0;background:transparent;text-align:right;
@@ -149,7 +180,7 @@ input[type=text],input[type=date]{
 .hero .label{font-size:13px;color:var(--muted)}
 .big{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:40px;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
 .big.neg{color:var(--l-red)}
-.alt{font-family:"IBM Plex Mono",monospace;font-size:17px;color:var(--muted);margin-top:2px}
+.alt{font-family:"IBM Plex Mono",monospace;font-size:17px;color:var(--l-thb);margin-top:2px}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--hair);border-radius:10px;overflow:hidden;margin-top:18px}
 .fact{background:var(--card);padding:12px 14px}
 .fact .k{font-size:11.5px;color:var(--muted)}
@@ -209,7 +240,7 @@ input[type=text],input[type=date]{
 .tx .what b{font-weight:500;font-size:14px}
 .tx .what .meta{font-size:11.5px;color:var(--muted)}
 .tx .amt{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:14.5px;text-align:right;white-space:nowrap}
-.tx .amt small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.tx .amt small{display:block;font-size:11px;color:var(--l-thb);font-weight:400}
 .amt.in{color:var(--l-green)}
 .note{font-size:12.5px;color:var(--muted);margin-top:10px}
 .msg{background:var(--card);border:1px solid var(--hair);border-left:5px solid var(--l-red);border-radius:var(--r);padding:18px;margin-top:18px}
@@ -266,6 +297,7 @@ input[type=text],input[type=date]{
 <div class="seg" role="tablist">
   <button role="tab" id="tab-rec" aria-selected="true" aria-controls="pane-rec">บันทึกรายการ</button>
   <button role="tab" id="tab-sum" aria-selected="false" aria-controls="pane-sum">สรุปงบ</button>
+  <button role="tab" id="tab-map" aria-selected="false" aria-controls="pane-map">แผนที่</button>
 </div>
 
 <div class="wrap"><div id="error"></div></div>
@@ -328,6 +360,15 @@ input[type=text],input[type=date]{
         </div>
       </div>
 
+      <div class="fld" id="evField">
+        <label>หลักฐานการจ่าย</label>
+        <label class="drop" for="shotInput">แตะเพื่อถ่ายรูปหรือเลือกไฟล์ใบเสร็จ
+          <input id="shotInput" type="file" accept="image/*" multiple>
+        </label>
+        <div class="shots" id="shots"></div>
+        <div class="upnote" id="upnote"></div>
+      </div>
+
       <button class="save out" id="save" type="button">บันทึกรายการ</button>
       <div class="status" id="status"></div>
     </div>
@@ -377,14 +418,6 @@ input[type=text],input[type=date]{
   </section>
 
   <section>
-    <div class="eyebrow">Route map</div>
-    <h2>สถานที่ในทริป</h2>
-    <div class="dayrow" id="dayChips"></div>
-    <div id="map"></div>
-    <div class="note">แตะหมุดเพื่อดูรายละเอียดและกดเปิด Google Maps นำทางต่อ</div>
-  </section>
-
-  <section>
     <div class="eyebrow">Breakdown</div>
     <h2>เงินหมดไปกับอะไรบ้าง</h2>
     <div class="card split">
@@ -407,6 +440,19 @@ input[type=text],input[type=date]{
     <h2>รายการทั้งหมด</h2>
     <div class="card" id="txlist"><div class="skeleton">กำลังโหลด…</div></div>
     <div class="foot"><span id="stamp">—</span><button class="btn" id="reload" type="button">ดึงข้อมูลใหม่</button></div>
+  </section>
+</div>
+</div>
+
+<!-- ============ ส่วนที่ 3 แผนที่ ============ -->
+<div class="pane" id="pane-map" role="tabpanel" aria-labelledby="tab-map">
+<div class="wrap">
+  <section>
+    <div class="eyebrow">Route map</div>
+    <h2>สถานที่ในทริป</h2>
+    <div class="dayrow" id="dayChips"></div>
+    <div id="map"></div>
+    <div class="note">แตะหมุดเพื่อดูรายละเอียดและกดเปิด Google Maps นำทางต่อ · เส้นประคือลำดับการเดินทางในวันนั้น</div>
   </section>
 </div>
 </div>
@@ -466,6 +512,16 @@ input[type=text],input[type=date]{
       <div><label for="edMemo">หมายเหตุ</label><input id="edMemo" type="text"></div>
     </div>
 
+    <div class="fld" id="edEvField">
+      <label>หลักฐานการจ่าย</label>
+      <div class="ev-wrap" id="edEvWrap"></div>
+      <label class="drop" for="edShotInput" style="margin-top:9px">แตะเพื่อเพิ่มรูปใบเสร็จ
+        <input id="edShotInput" type="file" accept="image/*" multiple>
+      </label>
+      <div class="shots" id="edShots"></div>
+      <div class="upnote" id="edUpnote"></div>
+    </div>
+
     <div class="acts">
       <button class="del" id="edDel" type="button">ลบ</button>
       <button class="save" id="edSave" type="button">บันทึกการแก้ไข</button>
@@ -499,7 +555,7 @@ input[type=text],input[type=date]{
    ตั้งค่าตรงนี้ที่เดียว — ดูวิธีหาค่าทั้งสองอันในคู่มือติดตั้ง ขั้นที่ 2
    ===================================================================== */
 const CONFIG = {
-  WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxfUY45AMkRSvvO7XGNJCxyH-JzQNUlkTNayc_ykkU6STVDd9f8l_fIr2n9QTJYcccFeg/exec",
+  WEB_APP_URL: "วางลิงก์ Apps Script ตรงนี้",
   KEY: "japan2026",          // ต้องตรงกับ SECRET ในไฟล์ Apps Script
   REFRESH_SECONDS: 45
 };
@@ -517,7 +573,16 @@ const SOURCES = ["เงินสด","Travel Card","บัตรเครดิ
 const SRC_COLOR = {"เงินสด":"#6E8B62","Travel Card":"#5F7F8C","บัตรเครดิต":"#9A7B8E","ไม่ระบุ":"#9A968E"};
 const SRC_KEY = {"เงินสด":"งบเงินสด","Travel Card":"งบ Travel Card","บัตรเครดิต":"งบบัตรเครดิต"};
 const canonCat = c => CAT_ALIAS[c] || c || OTHER;
-const CAT_COLOR = {"เดินทาง":"#7C93A0","ที่พัก":"#5F7F8C","อาหารและเครื่องดื่ม":"#C4874F","อาหาร":"#C4874F","ค่าเข้าชม":"#A79A50","ช้อปปิ้ง":"#9A7B8E","อื่น ๆ":"#9A968E","อื่นๆ":"#9A968E"};
+const CAT_COLOR = {
+  "เดินทาง":"#3D7EA6",            // ฟ้าคราม
+  "ที่พัก":"#6B5B95",             // ม่วงคราม
+  "อาหารและเครื่องดื่ม":"#C96A3F", // ส้มอิฐ
+  "อาหาร":"#C96A3F",
+  "ค่าเข้าชม":"#B2982F",          // เหลืองมัสตาร์ด
+  "ช้อปปิ้ง":"#A85277",           // ชมพูอมม่วง
+  "อื่น ๆ":"#6E8B62",             // เขียวมอส
+  "อื่นๆ":"#6E8B62"
+};
 const PLACE_COLOR = {"ที่พัก":"#5F7F8C","ที่เที่ยว":"#A6483C","ร้านอาหาร":"#C4874F","สถานี":"#6E8B62","ช้อปปิ้ง":"#9A7B8E"};
 const SPARE = ["#7C93A0","#C4874F","#9A7B8E","#6E8B62","#A79A50","#A6483C","#5F7F8C","#9A968E"];
 const C_GREEN="#6E8B62", C_RED="#A6483C", C_HAIR="#E2DED5", C_MUTED="#8C877D";
@@ -571,8 +636,10 @@ async function apiGet(){
   if(data.error) throw new Error(data.error);
   return data;
 }
-async function apiPost(row,action){
-  const body=JSON.stringify({key:CONFIG.KEY,action:action||"add",row:row});
+async function apiPost(row,action,files){
+  const payload={key:CONFIG.KEY,action:action||"add",row:row};
+  if(files&&files.length) payload.files=files.map(f=>({name:f.name,type:f.type,data:f.data}));
+  const body=JSON.stringify(payload);
   try{
     const res=await fetch(CONFIG.WEB_APP_URL,{method:"POST",body:body,redirect:"follow"});
     const out=await res.json();
@@ -628,6 +695,7 @@ function normalize(r){
     cat:canonCat(pick(r,"หมวด")),
     sub:pick(r,"รายการย่อย"),
     src:pick(r,"แหล่งเงิน"),
+    ev:pick(r,"หลักฐาน"),
     title:pick(r,"รายการ","รายละเอียด")||"(ไม่ระบุ)",
     jpy: isTHB ? (RATE?raw/RATE:0) : raw,
     who:pick(r,"ผู้จ่าย","คนจ่าย")||"กองกลาง",
@@ -667,7 +735,7 @@ function renderAll(){
   $("remainAlt").textContent=baht(remain);
   $("fBudget").innerHTML=yen(base)+"<small>"+baht(base)+"</small>";
   $("fSpent").innerHTML=yen(spent)+"<small>"+baht(spent)+"</small>";
-  $("fPct").innerHTML=(base>0?pct.toFixed(1):"0.0")+"%<small>ของงบตั้งต้น</small>";
+  $("fPct").innerHTML=(base>0?pct.toFixed(1):"0.0")+'%<small class="plain">ของงบตั้งต้น</small>';
 
   const t0=today0();
   const daysLeft=end?Math.max(1,Math.round((end-t0)/DAY_MS)+1):1;
@@ -678,7 +746,7 @@ function renderAll(){
   drawCats(out,spent);
   drawPeople(out,inc,spent);
   drawLedger(items,$("txlist"),40);
-  drawLedger(items,$("recent"),5);
+  drawLedger(items,$("recent"),10);
   drawMap();
   updateConv();
 }
@@ -703,7 +771,7 @@ function drawRail(start,end,out,base,t0){
   }
   rail.innerHTML=html;
   const cur=rail.querySelector(".stop.today");
-  if(cur) cur.scrollIntoView({block:"nearest",inline:"center"});
+  try{ if(cur&&cur.scrollIntoView) cur.scrollIntoView({block:"nearest",inline:"center"}); }catch(e){}
 }
 
 /* ---------------- หมวด ---------------- */
@@ -719,7 +787,9 @@ function drawCats(out,spent){
   const R=54,C=2*Math.PI*R; let off=0,arcs="";
   rows.forEach(([cat,v],i)=>{
     const len=spent>0?v/spent*C:0;
-    arcs+='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+colorFor(CAT_COLOR,cat,i)+'" stroke-width="26" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'"></circle>';
+    const gap=rows.length>1?Math.min(3,len*0.12):0;   // ช่องว่างบาง ๆ ให้แต่ละชิ้นแยกกันชัด
+    const seg=Math.max(0.5,len-gap);
+    arcs+='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+colorFor(CAT_COLOR,cat,i)+'" stroke-width="26" stroke-linecap="butt" stroke-dasharray="'+seg.toFixed(2)+' '+(C-seg).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'"></circle>';
     off+=len;
   });
   $("donut").innerHTML='<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="สัดส่วนค่าใช้จ่ายแต่ละหมวด" style="transform:rotate(-90deg)">'+arcs+'</svg>';
@@ -760,7 +830,7 @@ function drawPeople(out,inc,spent){
   const steps=[]; let a=0,b=0;
   while(a<owe.length&&b<get.length){
     const amt=Math.min(owe[a].v,get[b].v);
-    if(amt>1) steps.push(esc(owe[a].n)+" โอนให้ "+esc(get[b].n)+" <b class='mono'>"+yen(amt)+"</b> ("+baht(amt)+")");
+    if(amt>1) steps.push(esc(owe[a].n)+" โอนให้ "+esc(get[b].n)+" <b class='mono'>"+yen(amt)+'</b> <span class="thb mono">'+baht(amt)+"</span>");
     owe[a].v-=amt; get[b].v-=amt;
     if(owe[a].v<=1)a++; if(get[b].v<=1)b++;
   }
@@ -783,6 +853,7 @@ function drawLedger(items,box,limit){
       '<span class="when">'+(i.date?shortDate(i.date):"—")+'</span>'+
       '<span class="what"><b>'+esc(i.title)+'</b><div class="meta">'+esc(i.isIn?"เงินเข้า":(i.cat+(i.sub?" › "+i.sub:"")))+' · '+esc(i.src||i.who)+(waiting?" · กำลังบันทึก":(i.note?" · "+esc(i.note):""))+'</div></span>'+
       '<span class="amt '+(i.isIn?"in":"")+'">'+(i.isIn?"+":"−")+yen(i.jpy)+'<small>'+baht(i.jpy)+'</small></span>'+
+      (evIds(i.ev).length?'<span class="clip" title="มีหลักฐานแนบ">&#128206;</span>':'')+
       (editable?'<span class="go">›</span>':'')+'</div>';
   }).join("");
   box.querySelectorAll(".tx[data-id]").forEach(el=>{
@@ -895,8 +966,8 @@ function updateConv(){
   const v=num($("amt").value);
   $("conv").innerHTML = !v ? "" :
     (FORM.cur==="JPY"
-      ? "= <b>¥"+fmt(v)+"</b> · ฿"+fmt(v*RATE)
-      : "= <b>¥"+fmt(toJPY(v,"THB"))+"</b> · ฿"+fmt(v));
+      ? '= <b>¥'+fmt(v)+'</b> · <span class="thb">฿'+fmt(v*RATE)+'</span>'
+      : '= <b>¥'+fmt(toJPY(v,"THB"))+'</b> · <span class="thb">฿'+fmt(v)+'</span>');
   drawRateLine();
 }
 function drawRateLine(){
@@ -933,6 +1004,7 @@ function setKind(k){
   $("catField").style.display = k==="เงินเข้า" ? "none":"block";
   $("save").classList.toggle("out",k==="เงินออก");
   $("title").placeholder = k==="เงินเข้า" ? "เช่น ลงขันกองกลาง" : "เช่น ราเมงชินจูกุ";
+  $("evField").querySelector("label").textContent = k==="เงินเข้า" ? "หลักฐานการโอน" : "หลักฐานการจ่าย";
   buildSubChips();
   buildSrcChips();
 }
@@ -955,6 +1027,7 @@ async function saveRow(){
     "หมวด":isIn?"":FORM.cat,
     "รายการย่อย":sub,
     "แหล่งเงิน":isIn?"":FORM.src,
+    "หลักฐาน":"",
     "รายการ":$("title").value.trim()||(isIn?"เงินเข้า":(sub||FORM.cat)),
     "จำนวนเงิน":amount,
     "สกุล":FORM.cur,
@@ -964,12 +1037,16 @@ async function saveRow(){
   $("save").disabled=true;
   st.className="status wait"; st.textContent="กำลังบันทึก…";
 
+  const shots=PICK.rec.slice();
+  if(shots.length) st.textContent="กำลังอัปโหลดรูป "+shots.length+" ไฟล์…";
+
   PENDING.push(row);
   renderAll();
-  $("amt").value=""; $("title").value=""; $("memo").value=""; $("subOther").value=""; updateConv();
+  $("amt").value=""; $("title").value=""; $("memo").value=""; $("subOther").value="";
+  PICK.rec=[]; drawShots("rec"); updateConv();
 
   try{
-    const confirmed=await apiPost(row);
+    const confirmed=await apiPost(row,"add",shots);
     st.className="status ok";
     st.textContent = confirmed ? "บันทึกแล้ว" : "ส่งแล้ว กำลังตรวจสอบ…";
     setTimeout(async()=>{
@@ -990,6 +1067,94 @@ async function saveRow(){
     $("save").disabled=false;
   }
 }
+
+/* ---------------- หลักฐานการจ่าย (รูปใบเสร็จ) ---------------- */
+const MAX_SHOTS=4, MAX_EDGE=1400, JPEG_Q=0.72, MAX_TOTAL=6*1024*1024;
+let PICK={rec:[], ed:[]};          // ไฟล์ที่เลือกไว้ รอส่ง
+let EV_KEEP=[];                     // รหัสหลักฐานเดิมที่เก็บไว้ในหน้าต่างแก้ไข
+
+const evIds = v => String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
+const evThumb = id => "https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w400";
+const evOpen  = id => "https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view";
+
+/** ย่อรูปก่อนส่ง ไม่งั้นไฟล์จากกล้องมือถือใหญ่เกินจนอัปไม่ผ่าน */
+function shrink(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let {width:w,height:h}=img;
+      const scale=Math.min(1,MAX_EDGE/Math.max(w,h));
+      w=Math.round(w*scale); h=Math.round(h*scale);
+      const cv=document.createElement("canvas");
+      cv.width=w; cv.height=h;
+      const cx=cv.getContext("2d");
+      cx.fillStyle="#fff"; cx.fillRect(0,0,w,h);
+      cx.drawImage(img,0,0,w,h);
+      const dataUrl=cv.toDataURL("image/jpeg",JPEG_Q);
+      resolve({
+        name:(file.name||"receipt").replace(/\.[^.]+$/,"")+".jpg",
+        type:"image/jpeg",
+        data:dataUrl.split(",")[1],
+        preview:dataUrl,
+        bytes:Math.round(dataUrl.length*0.75)
+      });
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error("เปิดรูปไม่ได้")); };
+    img.src=url;
+  });
+}
+
+function pickBytes(which){ return PICK[which].reduce((a,f)=>a+f.bytes,0); }
+
+function drawShots(which){
+  const box=$(which==="rec"?"shots":"edShots");
+  const note=$(which==="rec"?"upnote":"edUpnote");
+  box.innerHTML=PICK[which].map((f,i)=>
+    '<div class="shot"><img src="'+f.preview+'" alt="ใบเสร็จ"><button class="rm" type="button" data-i="'+i+'" aria-label="เอาออก">&times;</button></div>').join("");
+  box.querySelectorAll(".rm").forEach(b=>b.addEventListener("click",()=>{
+    PICK[which].splice(+b.dataset.i,1); drawShots(which);
+  }));
+  const n=PICK[which].length;
+  note.textContent = n
+    ? "แนบ "+n+" รูป รวม "+(pickBytes(which)/1024/1024).toFixed(1)+" MB · รูปจะถูกย่อก่อนส่งเพื่อให้อัปโหลดผ่าน"
+    : "";
+}
+
+async function onPick(which,input){
+  const files=[...input.files].filter(f=>f.type.indexOf("image/")===0);
+  input.value="";
+  for(const f of files){
+    if(PICK[which].length>=MAX_SHOTS){ alert("แนบได้สูงสุด "+MAX_SHOTS+" รูปต่อหนึ่งรายการ"); break; }
+    try{
+      const shot=await shrink(f);
+      if(pickBytes(which)+shot.bytes>MAX_TOTAL){ alert("รูปรวมกันใหญ่เกินไป ลองลดจำนวนรูปลง"); break; }
+      PICK[which].push(shot);
+    }catch(e){ alert("ใช้ไฟล์นี้ไม่ได้: "+(e.message||e)); }
+  }
+  drawShots(which);
+}
+
+function drawKeptEv(){
+  const wrap=$("edEvWrap");
+  if(!EV_KEEP.length){
+    wrap.innerHTML='<span class="skeleton">ยังไม่มีหลักฐานแนบไว้</span>';
+    return;
+  }
+  wrap.innerHTML=EV_KEEP.map((id,i)=>
+    '<div class="shot" style="width:84px;height:84px">'+
+      '<a class="ev" href="'+evOpen(id)+'" target="_blank" rel="noopener">'+
+        '<img src="'+evThumb(id)+'" alt="หลักฐาน" loading="lazy">'+
+      '</a>'+
+      '<button class="rm" type="button" data-i="'+i+'" aria-label="เอาออกจากรายการนี้">&times;</button>'+
+    '</div>').join("");
+  wrap.querySelectorAll(".rm").forEach(b=>b.addEventListener("click",()=>{
+    EV_KEEP.splice(+b.dataset.i,1); drawKeptEv();
+  }));
+}
+
+$("shotInput").addEventListener("change",e=>onPick("rec",e.target));
+$("edShotInput").addEventListener("change",e=>onPick("ed",e.target));
 
 /* ---------------- แยกตามแหล่งเงิน ---------------- */
 function drawSources(out,srcBudget,srcTotal){
@@ -1014,7 +1179,7 @@ function drawSources(out,srcBudget,srcTotal){
         '<span class="vl'+(over?" neg":"")+'">'+(b>0?yen(left):"—")+'</span></div>'+
       '<div class="bar-track"><div class="bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+(over?"#A6483C":SRC_COLOR[x])+'"></div></div>'+
       '<div class="src-foot"><span class="mono">ใช้ '+yen(sp)+(b>0?" / "+yen(b):"")+'</span>'+
-        '<span class="mono">'+(b>0?("เหลือ "+baht(left)+" · "+pct.toFixed(0)+"%"):"ยังไม่ได้ตั้งงบ")+'</span></div>'+
+        '<span class="mono">'+(b>0?('เหลือ <span class="thb">'+baht(left)+'</span> · '+pct.toFixed(0)+"%"):"ยังไม่ได้ตั้งงบ")+'</span></div>'+
     '</div>';
   }).join("");
 }
@@ -1103,8 +1268,8 @@ function edSetCur(c){
 function edConvUpdate(){
   const v=num($("edAmt").value);
   $("edConv").innerHTML=!v?"":
-    (ED.cur==="JPY" ? "= <b>¥"+fmt(v)+"</b> · ฿"+fmt(v*RATE)
-                    : "= <b>¥"+fmt(toJPY(v,"THB"))+"</b> · ฿"+fmt(v));
+    (ED.cur==="JPY" ? '= <b>¥'+fmt(v)+'</b> · <span class="thb">฿'+fmt(v*RATE)+'</span>'
+                    : '= <b>¥'+fmt(toJPY(v,"THB"))+'</b> · <span class="thb">฿'+fmt(v)+'</span>');
 }
 function disarmDelete(){
   const d=$("edDel"); d.classList.remove("arm"); d.textContent="ลบ";
@@ -1133,6 +1298,8 @@ function openEditor(id){
   $("edTitleInput").value=it.title==="(ไม่ระบุ)"?"":it.title;
   $("edMemo").value=it.note;
   $("edDate").value=it.date?keyOf(it.date):keyOf(today0());
+  EV_KEEP=evIds(it.ev);
+  PICK.ed=[]; drawShots("ed"); drawKeptEv();
   edConvUpdate();
   disarmDelete();
   $("edStatus").textContent=""; $("edStatus").className="status";
@@ -1158,6 +1325,7 @@ async function saveEdit(){
     "หมวด":isIn?"":ED.cat,
     "รายการย่อย":sub,
     "แหล่งเงิน":isIn?"":ED.src,
+    "หลักฐาน":EV_KEEP.join(","),
     "รายการ":$("edTitleInput").value.trim()||(isIn?"เงินเข้า":(sub||ED.cat)),
     "จำนวนเงิน":amount,
     "สกุล":ED.cur,
@@ -1170,8 +1338,11 @@ async function saveEdit(){
   const idx=TX.findIndex(r=>pick(r,"รหัส")===ED.id);
   if(idx>=0) Object.keys(row).forEach(k=>{ if(k in TX[idx]) TX[idx][k]=String(row[k]); });
   renderAll();
+  const shots=PICK.ed.slice();
+  if(shots.length) st.textContent="กำลังอัปโหลดรูป "+shots.length+" ไฟล์…";
   try{
-    await apiPost(row,"update");
+    await apiPost(row,"update",shots);
+    PICK.ed=[];
     closeEditor();
     setTimeout(load,1500);
   }catch(e){
@@ -1223,17 +1394,19 @@ $("amt").addEventListener("input",updateConv);
 $("save").addEventListener("click",saveRow);
 $("reload").addEventListener("click",load);
 
+const TABS_UI=["rec","sum","map"];
 function showTab(which){
-  const rec=which==="rec";
-  $("tab-rec").setAttribute("aria-selected",rec);
-  $("tab-sum").setAttribute("aria-selected",!rec);
-  $("pane-rec").classList.toggle("on",rec);
-  $("pane-sum").classList.toggle("on",!rec);
+  TABS_UI.forEach(t=>{
+    const on=t===which;
+    $("tab-"+t).setAttribute("aria-selected",on);
+    $("pane-"+t).classList.toggle("on",on);
+  });
   window.scrollTo(0,0);
-  if(!rec&&MAP){ setTimeout(()=>{MAP.invalidateSize(); if(!MAP_READY){paintMarkers();MAP_READY=true;}},60); }
+  if(which==="map"&&MAP){
+    setTimeout(()=>{ MAP.invalidateSize(); if(!MAP_READY){ paintMarkers(); MAP_READY=true; } },60);
+  }
 }
-$("tab-rec").addEventListener("click",()=>showTab("rec"));
-$("tab-sum").addEventListener("click",()=>showTab("sum"));
+TABS_UI.forEach(t=>$("tab-"+t).addEventListener("click",()=>showTab(t)));
 
 $("date").value=keyOf(today0());
 setKind("เงินออก");
